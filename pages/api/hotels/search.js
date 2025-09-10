@@ -74,7 +74,7 @@ export default async function handler(req, res) {
     );
 
     const hotelData = await hotelResp.json();
-
+    console.log("Booking.com raw response:", JSON.stringify(hotelData, null, 2));
     if (!hotelData?.result?.length) {
       return res.status(404).json({ error: "No hotels found" });
     }
