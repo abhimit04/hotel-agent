@@ -1,68 +1,35 @@
 // pages/api/hotels/search.js
-
 export default async function handler(req, res) {
   try {
-    const { city } = req.query;
-    if (!city) {
-      return res.status(400).json({ error: "City parameter is required" });
+    const { city, checkin, checkout, adults = 2, rooms = 1 } = req.query;
+
+    if (!city || !checkin || !checkout) {
+      return res.status(400).json({ error: "city, checkin, and checkout parameters are required" });
     }
 
-    // 1. Get destinationId from Booking.com locations
-    let locResp = await fetch(
-      `  `https://booking-com.p.rapidapi.com/v1/hotels/search?dest_id=${destId}&dest_type=${destType}&order_by=review_score&checkin_date=2025-09-15&checkout_date=2025-09-16&adults_number=2&room_number=1&locale=en-us&filter_by_currency=INR`,
-         {
-           headers: {
-             "x-rapidapi-host": "booking-com.p.rapidapi.com",
-             "x-rapidapi-key": process.env.RAPIDAPI_KEY,
-           },
-         }
-       );
+    // 1️⃣ Get destinationId from city name
+    const locResp = await fetch(
+      `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(city + ", India")}&locale=en-us`,
+      {
+        headers: {
+          "x-rapidapi-host": "booking-com.p.rapidapi.com",
+          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
+        },
+      }
+    );
 
-    let locData = await locResp.json();
-
-    // fallback if no results
-    if (!locData?.length) {
-      locResp = await fetch(
-        `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(
-          city + ", India"
-        )}&locale=en-us`,
-        {
-          headers: {
-            "x-rapidapi-host": "booking-com.p.rapidapi.com",
-            "x-rapidapi-key": process.env.RAPIDAPI_KEY,
-          },
-        }
-      );
-      locData = await locResp.json();
-    }
-
+    const locData = await locResp.json();
     if (!locData?.length) {
       return res.status(404).json({ error: "City not found in Booking.com" });
     }
 
-    const destId = locData[0].dest_id;
-    const destType = locData[0].dest_type;
+    // Prefer a city type destination
+    const location = locData.find(l => l.dest_type === "city") || locData[0];
+    const { dest_id: destId, dest_type: destType } = location;
 
-    if (!destId || !destType) {
-      return res.status(500).json({ error: "Invalid destination data" });
-    }
-
-    // 2. Dates (tomorrow -> day after tomorrow)
-    const today = new Date();
-    const checkinDate = new Date(today);
-    checkinDate.setDate(today.getDate() + 1);
-    const checkoutDate = new Date(today);
-    checkoutDate.setDate(today.getDate() + 2);
-
-    const formatDate = (d) => d.toISOString().split("T")[0];
-
-    // 3. Search hotels
+    // 2️⃣ Search hotels
     const hotelResp = await fetch(
-      `https://booking-com.p.rapidapi.com/v1/hotels/search?dest_id=${destId}&dest_type=${destType}&order_by=review_score&checkin_date=${formatDate(
-        checkinDate
-      )}&checkout_date=${formatDate(
-        checkoutDate
-      )}&adults_number=2&locale=en-us&filter_by_currency=INR&units=metric`,
+      `https://booking-com.p.rapidapi.com/v1/hotels/search?dest_id=${destId}&dest_type=${destType}&order_by=review_score&checkin_date=${checkin}&checkout_date=${checkout}&adults_number=${adults}&room_number=${rooms}&locale=en-us&filter_by_currency=INR`,
       {
         headers: {
           "x-rapidapi-host": "booking-com.p.rapidapi.com",
@@ -72,26 +39,25 @@ export default async function handler(req, res) {
     );
 
     const hotelData = await hotelResp.json();
-    console.log("Booking.com raw response:", JSON.stringify(hotelData, null, 2));
     if (!hotelData?.result?.length) {
       return res.status(404).json({ error: "No hotels found" });
     }
 
-    // 4. Map hotels
-    const hotels = hotelData.result.map((h) => ({
+    // 3️⃣ Map results
+    const hotels = hotelData.result.map(h => ({
       id: h.hotel_id,
       name: h.hotel_name,
       address: h.address,
-      reviewScore: h.review_score ?? "N/A",
-      reviewCount: h.review_nr ?? 0,
-      price: h.price_breakdown?.all_inclusive_price ?? "N/A",
-      currency: h.price_breakdown?.currency ?? "INR",
-      photo: h.max_photo_url ?? null,
+      reviewScore: h.review_score,
+      reviewCount: h.review_nr,
+      price: h.price_breakdown?.all_inclusive_price,
+      currency: h.price_breakdown?.currency,
+      photo: h.max_photo_url,
     }));
 
-    return res.status(200).json({ city, hotels });
+    return res.status(200).json({ city, checkin, checkout, hotels });
   } catch (err) {
-    console.error("Hotel search error:", err);
+    console.error("Hotel search error:", err.message);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 }
