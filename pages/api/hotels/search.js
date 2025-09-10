@@ -9,16 +9,14 @@ export default async function handler(req, res) {
 
     // 1. Get destinationId from Booking.com locations
     let locResp = await fetch(
-      `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(
-        city
-      )}&locale=en-us`,
-      {
-        headers: {
-          "x-rapidapi-host": "booking-com.p.rapidapi.com",
-          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
-        },
-      }
-    );
+      `  `https://booking-com.p.rapidapi.com/v1/hotels/search?dest_id=${destId}&dest_type=${destType}&order_by=review_score&checkin_date=2025-09-15&checkout_date=2025-09-16&adults_number=2&room_number=1&locale=en-us&filter_by_currency=INR`,
+         {
+           headers: {
+             "x-rapidapi-host": "booking-com.p.rapidapi.com",
+             "x-rapidapi-key": process.env.RAPIDAPI_KEY,
+           },
+         }
+       );
 
     let locData = await locResp.json();
 
