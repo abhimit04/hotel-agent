@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Star, MapPin, Calendar, Users, Loader2, AlertCircle, ExternalLink, DollarSign } from 'lucide-react';
 //import HotelApiHandler from '.api/hotels/hotel-api-handler.js';
 
-const hotelAPI = new HotelApiHandler();
+//const hotelAPI = new HotelApiHandler();
 
 //const searchHotels = async () => {
 //  const results = await hotelAPI.searchHotels({
