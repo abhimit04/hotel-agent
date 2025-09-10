@@ -202,6 +202,8 @@ class HotelApiHandler {
               page_number: '1'
             }).toString();
 
+             console.log('Expedia API URL:', url.toString());
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
