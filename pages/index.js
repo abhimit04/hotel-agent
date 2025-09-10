@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Star, MapPin, Calendar, Users, Loader2, AlertCircle, ExternalLink, DollarSign } from 'lucide-react';
+import HotelApiHandler from './hotel-api-handler.js';
+
+const hotelAPI = new HotelApiHandler();
+
+//const searchHotels = async () => {
+//  const results = await hotelAPI.searchHotels({
+//    city,
+//    checkIn,
+//    checkOut,
+//    guests,
+//    platforms: selectedPlatforms
+//  });
+//
+//  setHotels(results.hotels);
+//  setPlatformResults(results.platformResults);
+//};
 
 const HotelLandingPage = () => {
   const [searchParams, setSearchParams] = useState({
