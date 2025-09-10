@@ -1,9 +1,9 @@
+// pages/api/hotels/search.js
 export default async function handler(req, res) {
   try {
-    const { city, checkin, checkout, adults = 2, rooms = 1 } = req.query;
-
-    if (!city || !checkin || !checkout) {
-      return res.status(400).json({ error: "city, checkin and checkout are required" });
+    const { city } = req.query;
+    if (!city) {
+      return res.status(400).json({ error: "City parameter is required" });
     }
 
     // 1. Get destinationId from city name
@@ -22,12 +22,17 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "City not found in Booking.com" });
     }
 
-    const destId = locData[0].dest_id;
-    const destType = locData[0].dest_type;
+    // Pick first numeric dest_id
+    const destObj = locData.find(l => Number.isInteger(l.dest_id)) || locData[0];
+    const destId = destObj.dest_id;
+    const destType = destObj.dest_type;
 
     // 2. Search hotels
+    const checkin = "2025-09-15";
+    const checkout = "2025-09-16";
+
     const hotelResp = await fetch(
-      `https://booking-com.p.rapidapi.com/v1/hotels/search?dest_id=${destId}&dest_type=${destType}&checkin_date=${checkin}&checkout_date=${checkout}&adults_number=${adults}&room_number=${rooms}&order_by=review_score&locale=en-us&filter_by_currency=INR`,
+      `https://booking-com.p.rapidapi.com/v1/hotels/search?dest_id=${destId}&dest_type=${destType}&checkin_date=${checkin}&checkout_date=${checkout}&adults_number=2&units=1&order_by=review_score&locale=en-us&filter_by_currency=INR`,
       {
         headers: {
           "x-rapidapi-host": "booking-com.p.rapidapi.com",
@@ -42,7 +47,8 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "No hotels found" });
     }
 
-    const hotels = hotelData.result.map((h) => ({
+    // 3. Map results
+    const hotels = hotelData.result.map(h => ({
       id: h.hotel_id,
       name: h.hotel_name,
       address: h.address,
