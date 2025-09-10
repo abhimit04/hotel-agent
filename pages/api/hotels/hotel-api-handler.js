@@ -189,7 +189,7 @@ class HotelApiHandler {
     const { city, checkIn, checkOut, guests } = searchParams;
 
     try {
-      // Using Hotels.com API (part of Expedia Group)
+      // Using Hotels.com.provider API (part of Expedia Group)
       // Step 1: Search for the destination ID
          const destUrl = new URL('https://hotels-com-provider.p.rapidapi.com/v2/destinations/search');
          destUrl.search = new URLSearchParams({
@@ -265,43 +265,43 @@ class HotelApiHandler {
   }
 
   // Hotels.com direct API
-  async fetchHotelsData(searchParams) {
-    const { city, checkIn, checkOut, guests } = searchParams;
-
-    try {
-      const url = new URL('https://hotels4.p.rapidapi.com/locations/v3/search');
-            url.search = new URLSearchParams({
-              q: city,
-              locale: 'en_US',
-              langid: '1033',
-              siteid: '300000001'
-            }).toString();
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
-          'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
-        }
-//        params: new URLSearchParams({
-//          q: city,
-//          locale: 'en_US',
-//          langid: '1033',
-//          siteid: '300000001'
-//        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Hotels.com API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return this.parseHotelsResponse(data, searchParams);
-
-    } catch (error) {
-      console.error('Hotels.com API error:', error);
-      return this.generateMockHotelsData(searchParams);
-    }
-  }
+//  async fetchHotelsData(searchParams) {
+//    const { city, checkIn, checkOut, guests } = searchParams;
+//
+//    try {
+//      const url = new URL('https://hotels4.p.rapidapi.com/locations/v3/search');
+//            url.search = new URLSearchParams({
+//              q: city,
+//              locale: 'en_US',
+//              langid: '1033',
+//              siteid: '300000001'
+//            }).toString();
+//      const response = await fetch(url, {
+//        method: 'GET',
+//        headers: {
+//          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
+//          'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
+//        }
+////        params: new URLSearchParams({
+////          q: city,
+////          locale: 'en_US',
+////          langid: '1033',
+////          siteid: '300000001'
+////        })
+//      });
+//
+//      if (!response.ok) {
+//        throw new Error(`Hotels.com API error: ${response.status}`);
+//      }
+//
+//      const data = await response.json();
+//      return this.parseHotelsResponse(data, searchParams);
+//
+//    } catch (error) {
+//      console.error('Hotels.com API error:', error);
+//      return this.generateMockHotelsData(searchParams);
+//    }
+//  }
 
   // RapidAPI generic hotel search
   async fetchRapidApiData(searchParams) {
@@ -466,11 +466,11 @@ class HotelApiHandler {
     };
   }
 
-  parseHotelsResponse(data, searchParams) {
-    // This would parse the Hotels.com response format
-    // Implementation depends on actual API response structure
-    return this.generateMockHotelsData(searchParams);
-  }
+//  parseHotelsResponse(data, searchParams) {
+//    // This would parse the Hotels.com response format
+//    // Implementation depends on actual API response structure
+//    return this.generateMockHotelsData(searchParams);
+//  }
 
   parseRapidApiResponse(data) {
     // This would parse the RapidAPI response format
