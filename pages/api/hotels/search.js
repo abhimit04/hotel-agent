@@ -1,6 +1,4 @@
 // pages/api/hotels/search.js
-//import fetch from "node-fetch";
-
 export default async function handler(req, res) {
   try {
     const { city } = req.query;
@@ -9,11 +7,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "City parameter is required" });
     }
 
-    // Step 1: Get coordinates of the city (Geocoding API)
+    // Step 1: Geocode city
     const geoResp = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-        city
-      )}&key=${process.env.GOOGLE_API_KEY}`
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(city)}&key=${process.env.GOOGLE_API_KEY}`
     );
     const geoData = await geoResp.json();
 
@@ -23,11 +19,13 @@ export default async function handler(req, res) {
 
     const { lat, lng } = geoData.results[0].geometry.location;
 
-    // Step 2: Search for hotels near city center (Places API)
+    // Step 2: Search for hotels nearby
     const placesResp = await fetch(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=lodging&key=${process.env.GOOGLE_API_KEY}`
+      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=20000&type=lodging&key=${process.env.GOOGLE_API_KEY}`
     );
     const placesData = await placesResp.json();
+
+    console.log("Places API raw:", JSON.stringify(placesData, null, 2));
 
     if (!placesData.results?.length) {
       return res.status(404).json({ error: "No hotels found" });
