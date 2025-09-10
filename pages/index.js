@@ -44,11 +44,29 @@ export default function Home() {
       {!loading && hotels.length > 0 && (
         <ul style={{ listStyle: "none", padding: 0 }}>
           {hotels.map((h) => (
-            <li key={h.id} style={{ marginBottom: "1rem", borderBottom: "1px solid #ccc", paddingBottom: "0.5rem" }}>
+            <li
+              key={h.id}
+              style={{
+                marginBottom: "1rem",
+                borderBottom: "1px solid #ccc",
+                paddingBottom: "0.5rem"
+              }}
+            >
               <h3>{h.name}</h3>
               <p>{h.address}</p>
-              <p>⭐ {h.rating} ({h.userRatings} reviews)</p>
-              {h.priceLevel && <p>💰 Price Level: {h.priceLevel}</p>}
+              <p>⭐ {h.reviewScore || "N/A"} ({h.reviewCount || 0} reviews)</p>
+              {h.price && (
+                <p>
+                  💰 Price: {h.price} {h.currency}
+                </p>
+              )}
+              {h.photo && (
+                <img
+                  src={h.photo}
+                  alt={h.name}
+                  style={{ width: "200px", borderRadius: "8px" }}
+                />
+              )}
             </li>
           ))}
         </ul>
