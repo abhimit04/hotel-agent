@@ -1,37 +1,15 @@
-// pages/api/hotels/search.js
-
 export default async function handler(req, res) {
   try {
     const { city } = req.query;
-
     if (!city) {
       return res.status(400).json({ error: "City parameter is required" });
     }
 
-    // Booking.com RapidAPI endpoint
-    const url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(
-      city
-    )}&locale=en-gb`;
-
-    // Step 1: Get city location id
-    const locationResp = await fetch(url, {
-      headers: {
-        "x-rapidapi-host": "booking-com.p.rapidapi.com",
-        "x-rapidapi-key": process.env.RAPIDAPI_KEY,
-      },
-    });
-    const locations = await locationResp.json();
-
-    if (!locations?.length) {
-      return res.status(404).json({ error: "City not found in Booking.com" });
-    }
-
-    const destId = locations[0].dest_id;
-    const destType = locations[0].dest_type;
-
-    // Step 2: Search hotels
-    const hotelsResp = await fetch(
-      `https://booking-com.p.rapidapi.com/v1/hotels/search?checkin_date=2025-09-20&checkout_date=2025-09-21&dest_id=${destId}&dest_type=${destType}&locale=en-gb&adults_number=1&order_by=review_score&room_number=1&units=metric`,
+    // 1. Get destinationId from city name
+    const locResp = await fetch(
+      `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(
+        city
+      )}&locale=en-us`,
       {
         headers: {
           "x-rapidapi-host": "booking-com.p.rapidapi.com",
@@ -39,23 +17,40 @@ export default async function handler(req, res) {
         },
       }
     );
-    const hotelsData = await hotelsResp.json();
 
-    if (!hotelsData?.result?.length) {
+    const locData = await locResp.json();
+    if (!locData?.length) {
+      return res.status(404).json({ error: "City not found in Booking.com" });
+    }
+
+    const destId = locData[0].dest_id;
+    const destType = locData[0].dest_type;
+
+    // 2. Search hotels
+    const hotelResp = await fetch(
+      `https://booking-com.p.rapidapi.com/v1/hotels/search?dest_id=${destId}&dest_type=${destType}&order_by=review_score&checkin_date=2025-09-15&checkout_date=2025-09-16&adults_number=2&locale=en-us&filter_by_currency=INR`,
+      {
+        headers: {
+          "x-rapidapi-host": "booking-com.p.rapidapi.com",
+          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
+        },
+      }
+    );
+
+    const hotelData = await hotelResp.json();
+
+    if (!hotelData?.result?.length) {
       return res.status(404).json({ error: "No hotels found" });
     }
 
-    // Step 3: Map hotel results
-    const hotels = hotelsData.result.map((h) => ({
+    const hotels = hotelData.result.map((h) => ({
       id: h.hotel_id,
       name: h.hotel_name,
       address: h.address,
-      city: h.city,
-      country: h.country_trans,
-      rating: h.review_score || "N/A",
-      reviewCount: h.review_nr || 0,
-      price: h.min_total_price ? `${h.min_total_price} ${h.currency_code}` : "N/A",
-      url: h.url,
+      reviewScore: h.review_score,
+      reviewCount: h.review_nr,
+      price: h.price_breakdown?.all_inclusive_price,
+      currency: h.price_breakdown?.currency,
       photo: h.max_photo_url,
     }));
 
