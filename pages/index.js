@@ -65,20 +65,16 @@ const HotelLandingPage = () => {
     setHotels([]);
 
     try {
-      // Call the hotel API service
-      const response = await fetch('/api/hotels/hotel-api-handler', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          destination: searchParams.city,
-          checkin: searchParams.checkIn,
-          checkout: searchParams.checkOut,
-          guests: searchParams.guests,
-          rooms: searchParams.rooms
-        })
-      });
+           // Construct URL with query parameters
+              const urlParams = new URLSearchParams({
+                  destination: searchParams.city,
+                  checkin: searchParams.checkIn,
+                  checkout: searchParams.checkOut,
+                  guests: searchParams.guests,
+                  rooms: searchParams.rooms
+              }).toString();
+
+              const response = await fetch(`/api/hotels/search?${urlParams}`);
 
       if (!response.ok) {
         throw new Error(`API Error: ${response.status}`);
