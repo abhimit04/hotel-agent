@@ -190,11 +190,40 @@ class HotelApiHandler {
 
     try {
       // Using Hotels.com API (part of Expedia Group)
+      // Step 1: Search for the destination ID
+         const destUrl = new URL('https://hotels-com-provider.p.rapidapi.com/v2/destinations/search');
+         destUrl.search = new URLSearchParams({
+                  query: city,
+                  locale: 'en_US'
+         }).toString();
+
+         const destResponse = await fetch(destUrl, {
+                  method: 'GET',
+                  headers: {
+                      'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
+                      'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
+          }
+          });
+          if (!destResponse.ok) {
+                          throw new Error(`Expedia Destination API error: ${destResponse.status}`);
+          }
+
+          const destData = await destResponse.json();
+
+                      // Find the destination ID. This is a common pattern for these APIs.
+          const destinationId = destData?.suggestions[0]?.entities?.[0]?.destinationId;
+
+          if (!destinationId) {
+                          throw new Error('Could not find a valid destination ID for the city.');
+          }
+
+          // Step 2: Use the destination ID in the hotel search
+
       const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
             url.search = new URLSearchParams({
               domain: 'US',
               locale: 'en_US',
-              destination: city,
+              destination: destinationId,
               checkin_date: checkIn,
               checkout_date: checkOut,
               adults: guests.toString(),
