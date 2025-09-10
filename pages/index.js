@@ -2,20 +2,25 @@ import { useState } from "react";
 
 export default function Home() {
   const [city, setCity] = useState("");
+  const [checkin, setCheckin] = useState("");
+  const [checkout, setCheckout] = useState("");
+  const [adults, setAdults] = useState(2);
+  const [rooms, setRooms] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hotels, setHotels] = useState([]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!city) return;
+    if (!city || !checkin || !checkout) return;
 
     setLoading(true);
     setHotels([]);
 
     try {
-      const res = await fetch(`/api/hotels/search?city=${encodeURIComponent(city)}`);
+      const res = await fetch(
+        `/api/hotels/search?city=${encodeURIComponent(city)}&checkin=${checkin}&checkout=${checkout}&adults=${adults}&rooms=${rooms}`
+      );
       const data = await res.json();
-       console.log("Hotels API response:", data);
       setHotels(data.hotels || []);
     } catch (err) {
       console.error("Search error:", err);
@@ -33,9 +38,35 @@ export default function Home() {
           value={city}
           placeholder="Enter a city (e.g., Delhi)"
           onChange={(e) => setCity(e.target.value)}
-          style={{ padding: "0.5rem", width: "250px" }}
+          style={{ padding: "0.5rem", width: "200px", marginRight: "0.5rem" }}
         />
-        <button type="submit" style={{ marginLeft: "0.5rem", padding: "0.5rem 1rem" }}>
+        <input
+          type="date"
+          value={checkin}
+          onChange={(e) => setCheckin(e.target.value)}
+          style={{ padding: "0.5rem", marginRight: "0.5rem" }}
+        />
+        <input
+          type="date"
+          value={checkout}
+          onChange={(e) => setCheckout(e.target.value)}
+          style={{ padding: "0.5rem", marginRight: "0.5rem" }}
+        />
+        <input
+          type="number"
+          min="1"
+          value={adults}
+          onChange={(e) => setAdults(e.target.value)}
+          style={{ padding: "0.5rem", width: "60px", marginRight: "0.5rem" }}
+        />
+        <input
+          type="number"
+          min="1"
+          value={rooms}
+          onChange={(e) => setRooms(e.target.value)}
+          style={{ padding: "0.5rem", width: "60px", marginRight: "0.5rem" }}
+        />
+        <button type="submit" style={{ padding: "0.5rem 1rem" }}>
           Search
         </button>
       </form>
@@ -50,24 +81,14 @@ export default function Home() {
               style={{
                 marginBottom: "1rem",
                 borderBottom: "1px solid #ccc",
-                paddingBottom: "0.5rem"
+                paddingBottom: "0.5rem",
               }}
             >
               <h3>{h.name}</h3>
               <p>{h.address}</p>
-              <p>⭐ {h.reviewScore || "N/A"} ({h.reviewCount || 0} reviews)</p>
-              {h.price && (
-                <p>
-                  💰 Price: {h.price} {h.currency}
-                </p>
-              )}
-              {h.photo && (
-                <img
-                  src={h.photo}
-                  alt={h.name}
-                  style={{ width: "200px", borderRadius: "8px" }}
-                />
-              )}
+              <p>⭐ {h.reviewScore} ({h.reviewCount} reviews)</p>
+              {h.price && <p>💰 Price: {h.price} {h.currency}</p>}
+              {h.photo && <img src={h.photo} alt={h.name} style={{ maxWidth: "300px", marginTop: "0.5rem" }} />}
             </li>
           ))}
         </ul>
