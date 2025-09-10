@@ -94,25 +94,40 @@ class HotelApiHandler {
 
     try {
       // Using RapidAPI's Booking.com API
-      const response = await fetch('https://booking-com.p.rapidapi.com/v1/hotels/search', {
+      const url = new URL('https://booking-com.p.rapidapi.com/v1/hotels/search');
+            url.search = new URLSearchParams({
+              dest_type: 'city',
+              dest_id: await this.getCityId(city, 'booking'),
+              checkin_date: checkIn,
+              checkout_date: checkOut,
+              adults_number: guests.toString(),
+              order_by: 'popularity',
+              filter_by_currency: 'USD',
+              locale: 'en-gb',
+              room_number: '1',
+              units: 'metric',
+              include_adjacency: 'true'
+            }).toString();
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
           'X-RapidAPI-Host': 'booking-com.p.rapidapi.com'
-        },
-        params: new URLSearchParams({
-          dest_type: 'city',
-          dest_id: await this.getCityId(city, 'booking'),
-          checkin_date: checkIn,
-          checkout_date: checkOut,
-          adults_number: guests.toString(),
-          order_by: 'popularity',
-          filter_by_currency: 'USD',
-          locale: 'en-gb',
-          room_number: '1',
-          units: 'metric',
-          include_adjacency: 'true'
-        })
+        }
+//        params: new URLSearchParams({
+//          dest_type: 'city',
+//          dest_id: await this.getCityId(city, 'booking'),
+//          checkin_date: checkIn,
+//          checkout_date: checkOut,
+//          adults_number: guests.toString(),
+//          order_by: 'popularity',
+//          filter_by_currency: 'USD',
+//          locale: 'en-gb',
+//          room_number: '1',
+//          units: 'metric',
+//          include_adjacency: 'true'
+//        })
       });
 
       if (!response.ok) {
@@ -135,23 +150,25 @@ class HotelApiHandler {
 
     try {
       // Using travel-advisor API as alternative
-      const response = await fetch('https://travel-advisor.p.rapidapi.com/hotels/list', {
+      const url = new URL('https://travel-advisor.p.rapidapi.com/hotels/list');
+            url.search = new URLSearchParams({
+              location_id: await this.getCityId(city, 'tripadvisor'),
+              adults: guests.toString(),
+              checkin: checkIn,
+              checkout: checkOut,
+              offset: '0',
+              currency: 'USD',
+              order: 'asc',
+              limit: '30',
+              sort: 'recommended'
+            }).toString();
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
           'X-RapidAPI-Host': 'travel-advisor.p.rapidapi.com'
-        },
-        params: new URLSearchParams({
-          location_id: await this.getCityId(city, 'tripadvisor'),
-          adults: guests.toString(),
-          checkin: checkIn,
-          checkout: checkOut,
-          offset: '0',
-          currency: 'USD',
-          order: 'asc',
-          limit: '30',
-          sort: 'recommended'
-        })
+        }
+
       });
 
       if (!response.ok) {
@@ -173,22 +190,34 @@ class HotelApiHandler {
 
     try {
       // Using Hotels.com API (part of Expedia Group)
-      const response = await fetch('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search', {
+      const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
+            url.search = new URLSearchParams({
+              domain: 'US',
+              locale: 'en_US',
+              destination: city,
+              checkin_date: checkIn,
+              checkout_date: checkOut,
+              adults: guests.toString(),
+              sort_order: 'REVIEW',
+              page_number: '1'
+            }).toString();
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
           'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
-        },
-        params: new URLSearchParams({
-          domain: 'US',
-          locale: 'en_US',
-          destination: city,
-          checkin_date: checkIn,
-          checkout_date: checkOut,
-          adults: guests.toString(),
-          sort_order: 'REVIEW',
-          page_number: '1'
-        })
+        }
+//        params: new URLSearchParams({
+//          domain: 'US',
+//          locale: 'en_US',
+//          destination: city,
+//          checkin_date: checkIn,
+//          checkout_date: checkOut,
+//          adults: guests.toString(),
+//          sort_order: 'REVIEW',
+//          page_number: '1'
+//        })
       });
 
       if (!response.ok) {
@@ -209,18 +238,25 @@ class HotelApiHandler {
     const { city, checkIn, checkOut, guests } = searchParams;
 
     try {
-      const response = await fetch('https://hotels4.p.rapidapi.com/locations/v3/search', {
+      const url = new URL('https://hotels4.p.rapidapi.com/locations/v3/search');
+            url.search = new URLSearchParams({
+              q: city,
+              locale: 'en_US',
+              langid: '1033',
+              siteid: '300000001'
+            }).toString();
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
           'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
-        },
-        params: new URLSearchParams({
-          q: city,
-          locale: 'en_US',
-          langid: '1033',
-          siteid: '300000001'
-        })
+        }
+//        params: new URLSearchParams({
+//          q: city,
+//          locale: 'en_US',
+//          langid: '1033',
+//          siteid: '300000001'
+//        })
       });
 
       if (!response.ok) {
@@ -241,20 +277,29 @@ class HotelApiHandler {
     const { city, checkIn, checkOut, guests } = searchParams;
 
     try {
-      const response = await fetch('https://priceline-com-provider.p.rapidapi.com/v1/hotels/search', {
+      const url = new URL('https://priceline-com-provider.p.rapidapi.com/v1/hotels/search');
+            url.search = new URLSearchParams({
+              sort_order: 'HDR',
+              location_id: await this.getCityId(city, 'priceline'),
+              date_checkout: checkOut,
+              date_checkin: checkIn,
+              adults_number: guests.toString(),
+              rooms_number: '1'
+            }).toString();
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
           'X-RapidAPI-Host': 'priceline-com-provider.p.rapidapi.com'
-        },
-        params: new URLSearchParams({
-          sort_order: 'HDR',
-          location_id: await this.getCityId(city, 'priceline'),
-          date_checkout: checkOut,
-          date_checkin: checkIn,
-          adults_number: guests.toString(),
-          rooms_number: '1'
-        })
+        }
+//        params: new URLSearchParams({
+//          sort_order: 'HDR',
+//          location_id: await this.getCityId(city, 'priceline'),
+//          date_checkout: checkOut,
+//          date_checkin: checkIn,
+//          adults_number: guests.toString(),
+//          rooms_number: '1'
+//        })
       });
 
       if (!response.ok) {
