@@ -7,9 +7,7 @@ export default async function handler(req, res) {
 
     // 1. Get destinationId from city name
     const locResp = await fetch(
-      `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(
-        city
-      )}&locale=en-us`,
+      `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(city + ", India")}&locale=en-us`,
       {
         headers: {
           "x-rapidapi-host": "booking-com.p.rapidapi.com",
