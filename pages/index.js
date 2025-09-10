@@ -66,7 +66,7 @@ const HotelLandingPage = () => {
 
     try {
       // Call the hotel API service
-      const response = await fetch('/api/hotels/search', {
+      const response = await fetch('/api/hotels/hotel-api-handler', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
