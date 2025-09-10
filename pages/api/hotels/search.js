@@ -1,7 +1,7 @@
 // pages/api/hotels/search.js
 
 // Import the HotelApiHandler class
-import HotelApiHandler from '../../../hotel-api-handler';
+import HotelApiHandler from '../api/hotels/hotel-api-handler';
 
 export default async function handler(req, res) {
   // Only allow GET requests for a search operation
