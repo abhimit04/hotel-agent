@@ -17,6 +17,7 @@ export default function Home() {
     try {
       const res = await fetch(`/api/hotels/search?city=${encodeURIComponent(city)}`);
       const data = await res.json();
+      console.log("Search response:", data);
 
       if (res.ok) {
         setHotels(data.hotels || []);

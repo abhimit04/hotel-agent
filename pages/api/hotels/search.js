@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     );
 
     const hotelData = await hotelResp.json();
-
+    console.log("Hotel search data:", hotelData);
     if (!hotelData?.result?.length) {
       return res.status(404).json({ error: "No hotels found" });
     }
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
       currency: h.price_breakdown?.currency,
       photo: h.max_photo_url,
     }));
-
+    console.log(`Found ${hotels.length} hotels in ${city}`);
     return res.status(200).json({ city, hotels });
   } catch (err) {
     console.error("Hotel search error:", err.message);
