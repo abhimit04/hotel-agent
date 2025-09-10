@@ -1,13 +1,12 @@
-// pages/api/hotels/search.js
 export default async function handler(req, res) {
   try {
     const { city, checkin, checkout, adults = 2, rooms = 1 } = req.query;
 
     if (!city || !checkin || !checkout) {
-      return res.status(400).json({ error: "city, checkin, and checkout parameters are required" });
+      return res.status(400).json({ error: "city, checkin and checkout are required" });
     }
 
-    // 1️⃣ Get destinationId from city name
+    // 1. Get destinationId from city name
     const locResp = await fetch(
       `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(city + ", India")}&locale=en-us`,
       {
@@ -23,13 +22,12 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "City not found in Booking.com" });
     }
 
-    // Prefer a city type destination
-    const location = locData.find(l => l.dest_type === "city") || locData[0];
-    const { dest_id: destId, dest_type: destType } = location;
+    const destId = locData[0].dest_id;
+    const destType = locData[0].dest_type;
 
-    // 2️⃣ Search hotels
+    // 2. Search hotels
     const hotelResp = await fetch(
-      `https://booking-com.p.rapidapi.com/v1/hotels/search?dest_id=${destId}&dest_type=${destType}&order_by=review_score&checkin_date=${checkin}&checkout_date=${checkout}&adults_number=${adults}&room_number=${rooms}&locale=en-us&filter_by_currency=INR`,
+      `https://booking-com.p.rapidapi.com/v1/hotels/search?dest_id=${destId}&dest_type=${destType}&checkin_date=${checkin}&checkout_date=${checkout}&adults_number=${adults}&room_number=${rooms}&order_by=review_score&locale=en-us&filter_by_currency=INR`,
       {
         headers: {
           "x-rapidapi-host": "booking-com.p.rapidapi.com",
@@ -39,12 +37,12 @@ export default async function handler(req, res) {
     );
 
     const hotelData = await hotelResp.json();
+
     if (!hotelData?.result?.length) {
       return res.status(404).json({ error: "No hotels found" });
     }
 
-    // 3️⃣ Map results
-    const hotels = hotelData.result.map(h => ({
+    const hotels = hotelData.result.map((h) => ({
       id: h.hotel_id,
       name: h.hotel_name,
       address: h.address,
@@ -55,7 +53,7 @@ export default async function handler(req, res) {
       photo: h.max_photo_url,
     }));
 
-    return res.status(200).json({ city, checkin, checkout, hotels });
+    return res.status(200).json({ city, hotels });
   } catch (err) {
     console.error("Hotel search error:", err.message);
     return res.status(500).json({ error: "Internal Server Error" });
