@@ -169,7 +169,7 @@ class HotelApiHandler {
     } catch (error) {
       console.error('Booking.com API error:', error);
       // Fallback to mock data for demonstration
-      return this.generateMockBookingData(searchParams);
+      return { hotels: [], platform,  skipped: true };
     }
   }
 
@@ -322,41 +322,41 @@ class HotelApiHandler {
 
 
   // RapidAPI generic hotel search
-  async fetchRapidApiData(searchParams) {
-    const { city, checkIn, checkOut, guests } = searchParams;
-
-    try {
-      const url = new URL('https://priceline-com-provider.p.rapidapi.com/v1/hotels/search');
-            url.search = new URLSearchParams({
-              sort_order: 'HDR',
-              location_id: await this.getCityId(city, 'priceline'),
-              date_checkout: checkOut,
-              date_checkin: checkIn,
-              adults_number: guests.toString(),
-              rooms_number: '1'
-            }).toString();
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
-          'X-RapidAPI-Host': 'priceline-com-provider.p.rapidapi.com'
-        }
+//  async fetchRapidApiData(searchParams) {
+//    const { city, checkIn, checkOut, guests } = searchParams;
 //
-      });
-
-      if (!response.ok) {
-        throw new Error(`RapidAPI error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('RapidAPI response data:', data);
-      return this.parseRapidApiResponse(data);
-
-    } catch (error) {
-      console.error('RapidAPI error:', error);
-      return this.generateMockRapidApiData(searchParams);
-    }
-  }
+//    try {
+//      const url = new URL('https://priceline-com-provider.p.rapidapi.com/v1/hotels/search');
+//            url.search = new URLSearchParams({
+//              sort_order: 'HDR',
+//              location_id: await this.getCityId(city, 'priceline'),
+//              date_checkout: checkOut,
+//              date_checkin: checkIn,
+//              adults_number: guests.toString(),
+//              rooms_number: '1'
+//            }).toString();
+//      const response = await fetch(url, {
+//        method: 'GET',
+//        headers: {
+//          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
+//          'X-RapidAPI-Host': 'priceline-com-provider.p.rapidapi.com'
+//        }
+////
+//      });
+//
+//      if (!response.ok) {
+//        throw new Error(`RapidAPI error: ${response.status}`);
+//      }
+//
+//      const data = await response.json();
+//      console.log('RapidAPI response data:', data);
+//      return this.parseRapidApiResponse(data);
+//
+//    } catch (error) {
+//      console.error('RapidAPI error:', error);
+//      return this.generateMockRapidApiData(searchParams);
+//    }
+//  }
 
   // Get city ID for different platforms
   async getCityId(cityName, platform) {
@@ -570,155 +570,155 @@ class HotelApiHandler {
   }
 
   // Mock data generators for fallback
-  generateMockBookingData(searchParams) {
-    const { city } = searchParams;
-    const mockHotels = [
-      {
-        id: `booking-${Date.now()}-1`,
-        name: `Grand ${city} Hotel`,
-        rating: 4.5,
-        location: `Central ${city}`,
-        price: Math.floor(Math.random() * 200) + 100,
-        currency: 'USD',
-        image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300&h=200&fit=crop',
-        description: `Luxury hotel in the heart of ${city}`,
-        amenities: ['WiFi', 'Pool', 'Gym', 'Restaurant'],
-        reviewCount: Math.floor(Math.random() * 1000) + 100,
-        platform: 'booking',
-        url: `https://booking.com/hotel/grand-${city.toLowerCase()}`,
-        coordinates: { lat: 0, lng: 0 }
-      },
-      {
-        id: `booking-${Date.now()}-2`,
-        name: `${city} Business Center`,
-        rating: 4.2,
-        location: `Business District, ${city}`,
-        price: Math.floor(Math.random() * 150) + 80,
-        currency: 'USD',
-        image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=300&h=200&fit=crop',
-        description: `Modern business hotel in ${city}`,
-        amenities: ['WiFi', 'Business Center', 'Conference Rooms'],
-        reviewCount: Math.floor(Math.random() * 800) + 150,
-        platform: 'booking',
-        url: `https://booking.com/hotel/${city.toLowerCase()}-business`,
-        coordinates: { lat: 0, lng: 0 }
-      }
-    ];
-
-    return {
-      platform: 'booking',
-      hotels: mockHotels,
-      total: mockHotels.length
-    };
-  }
-
-  generateMockAgodaData(searchParams) {
-    const { city } = searchParams;
-    const mockHotels = [
-      {
-        id: `agoda-${Date.now()}-1`,
-        name: `${city} Luxury Suites`,
-        rating: 4.6,
-        location: `Premium Area, ${city}`,
-        price: Math.floor(Math.random() * 250) + 150,
-        currency: 'USD',
-        image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=300&h=200&fit=crop',
-        description: `Luxury suites with premium amenities in ${city}`,
-        amenities: ['Spa', 'Fine Dining', 'Concierge', 'Valet'],
-        reviewCount: Math.floor(Math.random() * 600) + 200,
-        platform: 'agoda',
-        url: `https://agoda.com/hotel/${city.toLowerCase()}-luxury`,
-        coordinates: { lat: 0, lng: 0 }
-      }
-    ];
-
-    return {
-      platform: 'agoda',
-      hotels: mockHotels,
-      total: mockHotels.length
-    };
-  }
-
-  generateMockExpediaData(searchParams) {
-    const { city } = searchParams;
-    const mockHotels = [
-      {
-        id: `expedia-${Date.now()}-1`,
-        name: `${city} Resort & Spa`,
-        rating: 4.4,
-        location: `Resort Area, ${city}`,
-        price: Math.floor(Math.random() * 180) + 120,
-        currency: 'USD',
-        image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=300&h=200&fit=crop',
-        description: `Full-service resort with spa facilities in ${city}`,
-        amenities: ['Spa', 'Pool', 'Tennis', 'Golf', 'Multiple Restaurants'],
-        reviewCount: Math.floor(Math.random() * 900) + 300,
-        platform: 'expedia',
-        url: `https://expedia.com/hotel/${city.toLowerCase()}-resort`,
-        coordinates: { lat: 0, lng: 0 }
-      }
-    ];
-
-    return {
-      platform: 'expedia',
-      hotels: mockHotels,
-      total: mockHotels.length
-    };
-  }
-
-  generateMockHotelsData(searchParams) {
-    const { city } = searchParams;
-    const mockHotels = [
-      {
-        id: `hotels-${Date.now()}-1`,
-        name: `${city} Downtown Hotel`,
-        rating: 4.3,
-        location: `Downtown ${city}`,
-        price: Math.floor(Math.random() * 160) + 90,
-        currency: 'USD',
-        image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=300&h=200&fit=crop',
-        description: `Centrally located hotel in downtown ${city}`,
-        amenities: ['WiFi', 'Fitness Center', 'Restaurant', 'Bar'],
-        reviewCount: Math.floor(Math.random() * 700) + 250,
-        platform: 'hotels',
-        url: `https://hotels.com/hotel/${city.toLowerCase()}-downtown`,
-        coordinates: { lat: 0, lng: 0 }
-      }
-    ];
-
-    return {
-      platform: 'hotels',
-      hotels: mockHotels,
-      total: mockHotels.length
-    };
-  }
-
-  generateMockRapidApiData(searchParams) {
-    const { city } = searchParams;
-    const mockHotels = [
-      {
-        id: `rapidapi-${Date.now()}-1`,
-        name: `${city} Premium Inn`,
-        rating: 4.1,
-        location: `City Center, ${city}`,
-        price: Math.floor(Math.random() * 140) + 70,
-        currency: 'USD',
-        image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=300&h=200&fit=crop',
-        description: `Comfortable and affordable hotel in ${city}`,
-        amenities: ['WiFi', 'Breakfast', 'Parking', 'Pet Friendly'],
-        reviewCount: Math.floor(Math.random() * 500) + 100,
-        platform: 'rapidapi',
-        url: `https://example.com/hotel/${city.toLowerCase()}-premium`,
-        coordinates: { lat: 0, lng: 0 }
-      }
-    ];
-
-    return {
-      platform: 'rapidapi',
-      hotels: mockHotels,
-      total: mockHotels.length
-    };
-  }
+//  generateMockBookingData(searchParams) {
+//    const { city } = searchParams;
+//    const mockHotels = [
+//      {
+//        id: `booking-${Date.now()}-1`,
+//        name: `Grand ${city} Hotel`,
+//        rating: 4.5,
+//        location: `Central ${city}`,
+//        price: Math.floor(Math.random() * 200) + 100,
+//        currency: 'USD',
+//        image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300&h=200&fit=crop',
+//        description: `Luxury hotel in the heart of ${city}`,
+//        amenities: ['WiFi', 'Pool', 'Gym', 'Restaurant'],
+//        reviewCount: Math.floor(Math.random() * 1000) + 100,
+//        platform: 'booking',
+//        url: `https://booking.com/hotel/grand-${city.toLowerCase()}`,
+//        coordinates: { lat: 0, lng: 0 }
+//      },
+//      {
+//        id: `booking-${Date.now()}-2`,
+//        name: `${city} Business Center`,
+//        rating: 4.2,
+//        location: `Business District, ${city}`,
+//        price: Math.floor(Math.random() * 150) + 80,
+//        currency: 'USD',
+//        image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=300&h=200&fit=crop',
+//        description: `Modern business hotel in ${city}`,
+//        amenities: ['WiFi', 'Business Center', 'Conference Rooms'],
+//        reviewCount: Math.floor(Math.random() * 800) + 150,
+//        platform: 'booking',
+//        url: `https://booking.com/hotel/${city.toLowerCase()}-business`,
+//        coordinates: { lat: 0, lng: 0 }
+//      }
+//    ];
+//
+//    return {
+//      platform: 'booking',
+//      hotels: mockHotels,
+//      total: mockHotels.length
+//    };
+//  }
+//
+//  generateMockAgodaData(searchParams) {
+//    const { city } = searchParams;
+//    const mockHotels = [
+//      {
+//        id: `agoda-${Date.now()}-1`,
+//        name: `${city} Luxury Suites`,
+//        rating: 4.6,
+//        location: `Premium Area, ${city}`,
+//        price: Math.floor(Math.random() * 250) + 150,
+//        currency: 'USD',
+//        image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=300&h=200&fit=crop',
+//        description: `Luxury suites with premium amenities in ${city}`,
+//        amenities: ['Spa', 'Fine Dining', 'Concierge', 'Valet'],
+//        reviewCount: Math.floor(Math.random() * 600) + 200,
+//        platform: 'agoda',
+//        url: `https://agoda.com/hotel/${city.toLowerCase()}-luxury`,
+//        coordinates: { lat: 0, lng: 0 }
+//      }
+//    ];
+//
+//    return {
+//      platform: 'agoda',
+//      hotels: mockHotels,
+//      total: mockHotels.length
+//    };
+//  }
+//
+//  generateMockExpediaData(searchParams) {
+//    const { city } = searchParams;
+//    const mockHotels = [
+//      {
+//        id: `expedia-${Date.now()}-1`,
+//        name: `${city} Resort & Spa`,
+//        rating: 4.4,
+//        location: `Resort Area, ${city}`,
+//        price: Math.floor(Math.random() * 180) + 120,
+//        currency: 'USD',
+//        image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=300&h=200&fit=crop',
+//        description: `Full-service resort with spa facilities in ${city}`,
+//        amenities: ['Spa', 'Pool', 'Tennis', 'Golf', 'Multiple Restaurants'],
+//        reviewCount: Math.floor(Math.random() * 900) + 300,
+//        platform: 'expedia',
+//        url: `https://expedia.com/hotel/${city.toLowerCase()}-resort`,
+//        coordinates: { lat: 0, lng: 0 }
+//      }
+//    ];
+//
+//    return {
+//      platform: 'expedia',
+//      hotels: mockHotels,
+//      total: mockHotels.length
+//    };
+//  }
+//
+//  generateMockHotelsData(searchParams) {
+//    const { city } = searchParams;
+//    const mockHotels = [
+//      {
+//        id: `hotels-${Date.now()}-1`,
+//        name: `${city} Downtown Hotel`,
+//        rating: 4.3,
+//        location: `Downtown ${city}`,
+//        price: Math.floor(Math.random() * 160) + 90,
+//        currency: 'USD',
+//        image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=300&h=200&fit=crop',
+//        description: `Centrally located hotel in downtown ${city}`,
+//        amenities: ['WiFi', 'Fitness Center', 'Restaurant', 'Bar'],
+//        reviewCount: Math.floor(Math.random() * 700) + 250,
+//        platform: 'hotels',
+//        url: `https://hotels.com/hotel/${city.toLowerCase()}-downtown`,
+//        coordinates: { lat: 0, lng: 0 }
+//      }
+//    ];
+//
+//    return {
+//      platform: 'hotels',
+//      hotels: mockHotels,
+//      total: mockHotels.length
+//    };
+//  }
+//
+//  generateMockRapidApiData(searchParams) {
+//    const { city } = searchParams;
+//    const mockHotels = [
+//      {
+//        id: `rapidapi-${Date.now()}-1`,
+//        name: `${city} Premium Inn`,
+//        rating: 4.1,
+//        location: `City Center, ${city}`,
+//        price: Math.floor(Math.random() * 140) + 70,
+//        currency: 'USD',
+//        image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=300&h=200&fit=crop',
+//        description: `Comfortable and affordable hotel in ${city}`,
+//        amenities: ['WiFi', 'Breakfast', 'Parking', 'Pet Friendly'],
+//        reviewCount: Math.floor(Math.random() * 500) + 100,
+//        platform: 'rapidapi',
+//        url: `https://example.com/hotel/${city.toLowerCase()}-premium`,
+//        coordinates: { lat: 0, lng: 0 }
+//      }
+//    ];
+//
+//    return {
+//      platform: 'rapidapi',
+//      hotels: mockHotels,
+//      total: mockHotels.length
+//    };
+//  }
 
   // Utility functions
   delay(ms) {
