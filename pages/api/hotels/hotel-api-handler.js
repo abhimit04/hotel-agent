@@ -7,6 +7,20 @@ class HotelApiHandler {
     this.maxRetries = 3;
     this.cache = new Map();
     this.cacheExpiry = 30 * 60 * 1000; // 30 minutes
+    this.apiUsageLimits = {
+          booking: 1000,
+          agoda: 1000,
+          expedia: 1000,
+          hotels: 1000,
+          rapidapi: 1000
+        };
+    this.apiUsageCounts = {
+          booking: 0,
+          agoda: 0,
+          expedia: 0,
+          hotels: 0,
+          rapidapi: 0
+        };
   }
 
 
@@ -29,6 +43,14 @@ class HotelApiHandler {
       try {
         await this.delay(Math.random() * this.rateLimitDelay);
         const platformData = await this.fetchFromPlatform(platform, searchParams);
+        // Increment usage count
+        this.apiUsageCounts[platform] += 1;
+
+                // Limit top 10 by reviews
+        platformData.hotels = (platformData.hotels || [])
+        .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
+        .slice(0, 10);
+
         results.platformResults[platform] = platformData;
         return platformData;
       } catch (error) {
@@ -59,6 +81,10 @@ class HotelApiHandler {
       }
     }
 
+    if (this.apiUsageCounts[platform] >= this.apiUsageLimits[platform]) {
+          console.warn(`${platform} usage limit reached, skipping API call`);
+          return { hotels: [], platform };
+    }
     let data;
     switch (platform) {
       case 'booking':
