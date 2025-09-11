@@ -228,7 +228,7 @@ class HotelApiHandler {
         }
 
         // Prefer CITY type results, fallback to AIRPORT
-        cityResult = suggestions.find(r => r.type === 'CITY') || suggestions.find(r => r.type === 'AIRPORT');
+        const cityResult = suggestions.find(r => r.type === 'CITY') || suggestions.find(r => r.type === 'AIRPORT');
 
         if (!cityResult) {
           throw new Error(`No valid suggestions found for city: ${city}`);
