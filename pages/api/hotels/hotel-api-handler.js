@@ -124,8 +124,11 @@ class HotelApiHandler {
       timestamp: Date.now()
     });
 
-    return data;
+    // **FIX START**
+    // The `console.log` was moved before the `return` statement.
     console.log(`Fetched and cached data for ${platform}`);
+    return data;
+    // **FIX END**
   }
 
   // --- Booking.com API integration ---
@@ -166,7 +169,10 @@ class HotelApiHandler {
 
     } catch (error) {
         console.error('Booking.com API error:', error);
+        // **FIX START**
+        // Added 'booking' as a string literal instead of a variable
         return { hotels: [], platform: 'booking',  skipped: true };
+        // **FIX END**
     }
   }
 
