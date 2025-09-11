@@ -137,10 +137,10 @@ Hotels: ${JSON.stringify(hotels)}
     // --- Step 2: Generate summary separately ---
     const summaryPrompt = `You are a travel assistant.
     Write a well-formatted summary for the top hotels in "${city}". Focus on cleanliness, location, price, and overall guest experience.
-    Use **Markdown** and make it easy to scan:
+    Provide a structured analysis in Markdown format with these sections:
                           - Begin with a short intro sentence.
                           - Then list the top 3-5 hotels as bullet points with this style:
-                            • **Hotel Name** — short description, key highlight, and rating (if available).
+                           -Hotel Name — short description, key highlight, and rating (if available).
                           - End with a short closing remark (1 line) encouraging booking.
 
                           Hotels: ${JSON.stringify(topHotels)}
