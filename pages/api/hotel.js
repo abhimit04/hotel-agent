@@ -2,7 +2,6 @@ import fetch from 'node-fetch';
 import crypto from 'crypto';
 import orderBy from 'lodash/orderBy';
 
-// Environment variables (Vercel injects these automatically)
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '';
 const GEMINI_ENDPOINT = process.env.GEMINI_ENDPOINT || '';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
@@ -43,12 +42,15 @@ async function fetchBookingHotels(city, checkin=null, checkout=null, topN=5) {
 
   try {
     const res = await fetch(url.toString(), { headers });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error('Booking.com API error:', res.status, await res.text());
+      return [];
+    }
     const json = await res.json();
     const hotels = normalizeBookingResponse(json);
-    console.log(`Fetched ${hotels.length} hotels from Booking.com for city=${city}`);
     return orderBy(hotels, ['review_score','review_count'], ['desc','desc']).slice(0, topN).map(h => ({...h, source: 'booking-com.p.rapidapi.com'}));
   } catch (err) {
+    console.error('Error fetching Booking.com hotels:', err);
     return [];
   }
 }
@@ -81,25 +83,33 @@ async function rankWithGemini(hotels) {
 }
 
 export default async function handler(req, res) {
-  const city = req.query.city;
-  if (!city) return res.status(400).json({ error: 'city param required: ?city=London' });
-  const checkin = req.query.checkin || null;
-  const checkout = req.query.checkout || null;
+  try {
+    const city = req.query.city;
+    if (!city) return res.status(400).json({ error: 'city param required: ?city=London' });
+    const checkin = req.query.checkin || null;
+    const checkout = req.query.checkout || null;
 
-  const hotels = await fetchBookingHotels(city, checkin, checkout);
-  console.log(`Total hotels fetched before deduplication: ${hotels.length}`);
-  if (!hotels.length) return res.status(502).json({ error: 'No data from Booking.com API.' });
+    const hotels = await fetchBookingHotels(city, checkin, checkout);
+    if (!hotels.length) {
+      console.error('No hotels returned from Booking.com API for city:', city);
+      return res.status(502).json({ error: 'No data from Booking.com API.' });
+    }
 
-  const deduped = dedupeHotels(hotels);
-  const withScores = await rankWithGemini(deduped);
-  const final = orderBy(withScores, ['agent_score','review_score','review_count'], ['desc','desc','desc']).slice(0,10);
+    const deduped = dedupeHotels(hotels);
+    const withScores = await rankWithGemini(deduped);
+    const final = orderBy(withScores, ['agent_score','review_score','review_count'], ['desc','desc','desc']).slice(0,10);
 
-  const out = final.map(h => ({
-    id: h.id, name: h.name, address: h.address,
-    latitude: h.latitude, longitude: h.longitude, price: h.price,
-    review_score: h.review_score, review_count: h.review_count,
-    agent_score: h.agent_score
-  }));
+    const out = final.map(h => ({
+      id: h.id, name: h.name, address: h.address,
+      latitude: h.latitude, longitude: h.longitude, price: h.price,
+      review_score: h.review_score, review_count: h.review_count,
+      agent_score: h.agent_score
+    }));
 
-  res.status(200).json({ city, count: out.length, hotels: out });
+    res.status(200).json({ city, count: out.length, hotels: out });
+
+  } catch (err) {
+    console.error('Unhandled error in /api/hotel:', err);
+    res.status(500).json({ error: 'Internal server error while fetching hotels.' });
+  }
 }
