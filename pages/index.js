@@ -7,15 +7,15 @@ export default function HotelLanding() {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [aiSummary, setAiSummary] = useState('');
-  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [summary, setSummary] = useState('');
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
   const fetchHotels = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setHotels([]);
-    setAiSummary('');
+    setSummary("");
 
     try {
       console.log('Fetching hotels for city:', city);
@@ -28,35 +28,36 @@ export default function HotelLanding() {
       } else {
         setHotels(data.hotels);
         // Trigger AI summary generation
-        generateAiSummary(data.hotels, city);
+        setSummaryLoading(true);
+        setSummary(data.summary || "");
       }
     } catch (err) {
-      console.error(err);
-      setError('Error fetching hotels');
+      console.error("Error fetching hotels:", err);
+      setSummary("Failed to generate AI analysis");
     } finally {
       setLoading(false);
     }
   };
 
-  const generateAiSummary = async (hotelData, searchCity) => {
-    setAiSummaryLoading(true);
-    try {
-      // Simulate AI summary generation - replace with your actual API call
-      const summaryRes = await fetch('/api/ai-summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hotels: hotelData, city: searchCity })
-      });
-
-      const summaryData = await summaryRes.json();
-      setAiSummary(summaryData.summary);
-    } catch (err) {
-      console.error('Error generating AI summary:', err);
-      setAiSummary('Unable to generate AI summary at this time.');
-    } finally {
-      setAiSummaryLoading(false);
-    }
-  };
+//  const generateAiSummary = async (hotelData, searchCity) => {
+//    setAiSummaryLoading(true);
+//    try {
+//      // Simulate AI summary generation - replace with your actual API call
+//      const summaryRes = await fetch('/api/ai-summary', {
+//        method: 'POST',
+//        headers: { 'Content-Type': 'application/json' },
+//        body: JSON.stringify({ hotels: hotelData, city: searchCity })
+//      });
+//
+//      const summaryData = await summaryRes.json();
+//      setAiSummary(summaryData.summary);
+//    } catch (err) {
+//      console.error('Error generating AI summary:', err);
+//      setAiSummary('Unable to generate AI summary at this time.');
+//    } finally {
+//      setAiSummaryLoading(false);
+//    }
+//  };
 
   const handleSearch = () => {
     if (city.trim()) {
@@ -250,7 +251,7 @@ export default function HotelLanding() {
         </div>
 
         {/* AI Summary Section */}
-        {(hotels.length > 0 || aiSummaryLoading) && (
+        {(hotels.length > 0 || summaryLoading) && (
           <div className="w-full max-w-7xl mt-16 mb-8">
             <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 bg-opacity-40 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white border-opacity-20">
               {/* AI Summary Header */}
@@ -274,7 +275,7 @@ export default function HotelLanding() {
 
               {/* AI Summary Content */}
               <div className="relative">
-                {aiSummaryLoading ? (
+                {summaryLoading ? (
                   <div className="flex items-center gap-4 p-6 bg-white bg-opacity-10 rounded-2xl backdrop-blur-sm">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
@@ -283,7 +284,7 @@ export default function HotelLanding() {
                     </div>
                     <p className="text-white font-medium">AI is analyzing hotel data to generate personalized insights...</p>
                   </div>
-                ) : aiSummary ? (
+                ) : summary ? (
                   <div className="space-y-4">
                     <div className="bg-white bg-opacity-10 backdrop-blur-sm p-6 rounded-2xl border border-white border-opacity-20">
                       <div className="flex items-start gap-3">
@@ -294,7 +295,7 @@ export default function HotelLanding() {
                         </div>
                         <div className="flex-1">
                           <p className="text-white leading-relaxed text-lg font-light">
-                            {aiSummary}
+                            {summary}
                           </p>
                         </div>
                       </div>
@@ -324,7 +325,7 @@ export default function HotelLanding() {
               Hotel Finder
             </span>
           </div>
-          <p className="text-gray-300">&copy; 2025 Hotel Finder. All rights reserved. | Discover. Book. Explore.</p>
+          <p className="text-gray-300">&copy; 2025 AbhiAi. All rights reserved. | Discover. Book. Explore.</p>
         </div>
       </footer>
     </div>
