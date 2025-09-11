@@ -14,9 +14,7 @@ export default async function handler(req, res) {
 
   try {
     // --- Step 1: Geocode city to get coordinates ---
-    const geoUrl = `https://forward-reverse-geocoding.p.rapidapi.com/v1/forward?city=${encodeURIComponent(
-      city
-    )}&format=json&limit=1`;
+    const geoUrl = `https://forward-reverse-geocoding.p.rapidapi.com/v1/forward?city=${encodeURIComponent(city)}&format=json&limit=1`;
 
     const geoResponse = await fetch(geoUrl, {
       headers: {
@@ -96,14 +94,13 @@ export default async function handler(req, res) {
 //      hotels: aiResult.hotels,
 //      summary: aiResult.summary,
 //    });
-//  } catch (error) {
-//    console.error("[API LOG] Unexpected error:", error);
-//    return res.status(200).json({
-//      hotels: getDummyHotels(city),
-//      summary: `Internal error, fallback data used`,
-//    });
-//  }
-//}
+   } catch (error) {
+     console.error("[API LOG] Unexpected error:", error);
+     return res.status(200).json(hotels: getDummyHotels(city));
+   }
+
+ }
+
 
 
 
@@ -132,4 +129,4 @@ function getDummyHotels(city) {
     },
   ];
   }
-}
+
