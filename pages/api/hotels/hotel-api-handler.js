@@ -194,7 +194,7 @@ class HotelApiHandler {
           domain: 'IN'
         }).toString();
 
-        const destResponse = await fetchWithRetry(destUrl, {
+        const destResponse = await fetch(destUrl, {
           method: 'GET',
           headers: {
             'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
