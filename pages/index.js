@@ -7,12 +7,15 @@ export default function HotelLanding() {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [aiSummary, setAiSummary] = useState('');
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
 
   const fetchHotels = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setHotels([]);
+    setAiSummary('');
 
     try {
       console.log('Fetching hotels for city:', city);
@@ -24,12 +27,34 @@ export default function HotelLanding() {
         setError('No hotels found');
       } else {
         setHotels(data.hotels);
+        // Trigger AI summary generation
+        generateAiSummary(data.hotels, city);
       }
     } catch (err) {
       console.error(err);
       setError('Error fetching hotels');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateAiSummary = async (hotelData, searchCity) => {
+    setAiSummaryLoading(true);
+    try {
+      // Simulate AI summary generation - replace with your actual API call
+      const summaryRes = await fetch('/api/ai-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hotels: hotelData, city: searchCity })
+      });
+
+      const summaryData = await summaryRes.json();
+      setAiSummary(summaryData.summary);
+    } catch (err) {
+      console.error('Error generating AI summary:', err);
+      setAiSummary('Unable to generate AI summary at this time.');
+    } finally {
+      setAiSummaryLoading(false);
     }
   };
 
@@ -156,6 +181,7 @@ export default function HotelLanding() {
           <div className="flex items-center gap-3 bg-white bg-opacity-20 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-white border-opacity-30 mb-8">
             <div className="animate-spin rounded-full h-6 w-6 border-2 border-cyan-400 border-t-transparent"></div>
             <p className="text-white font-medium">Searching for the best hotels...</p>
+            <p className="text-white font-medium">This might take 25-30 sec as AI analysis happening in the background...</p>
           </div>
         )}
 
@@ -222,6 +248,70 @@ export default function HotelLanding() {
             </div>
           ))}
         </div>
+
+        {/* AI Summary Section */}
+        {(hotels.length > 0 || aiSummaryLoading) && (
+          <div className="w-full max-w-7xl mt-16 mb-8">
+            <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 bg-opacity-40 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white border-opacity-20">
+              {/* AI Summary Header */}
+              <div className="flex items-center gap-4 mb-6 pb-4 border-b border-white border-opacity-20">
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full animate-ping"></div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full"></div>
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-1 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+                    AI Summary
+                  </h2>
+                  <p className="text-purple-200 text-sm">Intelligent analysis of your hotel search results</p>
+                </div>
+              </div>
+
+              {/* AI Summary Content */}
+              <div className="relative">
+                {aiSummaryLoading ? (
+                  <div className="flex items-center gap-4 p-6 bg-white bg-opacity-10 rounded-2xl backdrop-blur-sm">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <p className="text-white font-medium">AI is analyzing hotel data to generate personalized insights...</p>
+                  </div>
+                ) : aiSummary ? (
+                  <div className="space-y-4">
+                    <div className="bg-white bg-opacity-10 backdrop-blur-sm p-6 rounded-2xl border border-white border-opacity-20">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-white leading-relaxed text-lg font-light">
+                            {aiSummary}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-purple-300 text-sm">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Analysis powered by AI • Generated in real-time</span>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       <footer className="relative z-10 bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 backdrop-blur-sm bg-opacity-90 text-white text-center p-6 mt-16 border-t border-white border-opacity-10">
