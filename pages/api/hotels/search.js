@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   }
 
   // Extract the search parameters from the URL query
-  const { destination, checkin, checkout, guests, rooms } = req.query;
+    const { destination, checkin, checkout, guests = '2', rooms = '1', platforms } = req.query;
 
   // Basic validation to ensure required parameters are present
   if (!destination || !checkin || !checkout) {
@@ -21,24 +21,36 @@ export default async function handler(req, res) {
     // Create an instance of your HotelApiHandler
     const hotelAPI = new HotelApiHandler();
 
+    //Prepare search parameters
+        const searchParams = {
+          city: destination,
+          checkIn: checkin,
+          checkOut: checkout,
+          guests: parseInt(guests, 10),
+          rooms: parseInt(rooms, 10),
+          platforms: platforms ? platforms.split(',') : undefined // e.g., "booking,expedia"
+        };
+
     // Call the search method with the extracted parameters
-    const results = await hotelAPI.searchHotels({
-      city: destination,
-      checkIn: checkin,
-      checkOut: checkout,
-      guests: parseInt(guests) || 2,
-      rooms: parseInt(rooms) || 1,
-    });
+     // Perform hotel search
+     const results = await hotelAPI.searchHotels(searchParams);
 
-    // Send a successful JSON response with the search results
-    res.status(200).json({
-      success: true,
-      data: results
-    });
+    // Optionally, compute price comparison
+        const hotelsWithPrice = hotelAPI.comparePrice(results.hotels);
 
-  } catch (error) {
-    // If an error occurs, log it and send a 500 status code
-    console.error('API search handler error:', error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
-  }
-}
+        res.status(200).json({
+          success: true,
+          data: {
+            searchId: results.searchId,
+            searchParams,
+            hotels: hotelsWithPrice,
+            platformResults: results.platformResults,
+            errors: results.errors
+          }
+        });
+
+      } catch (error) {
+        console.error('API search handler error:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+      }
+    }
