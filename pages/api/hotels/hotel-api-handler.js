@@ -194,6 +194,10 @@ class HotelApiHandler {
 
       const data = await response.json();
       console.log('Agoda response data:', data);
+      if (data.errors && data.errors.length > 0) {
+            console.warn('Agoda API error response:', data.errors);
+            return { hotels: [], platform: 'agoda', error: data.errors };
+      }
       return this.parseAgodaResponse(data);
 
     } catch (error) {
