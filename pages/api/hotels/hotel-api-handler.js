@@ -229,6 +229,7 @@ class HotelApiHandler {
           }
         });
 
+        console.log('Expedia destination response status:', destResponse.status);
         // ✅ Handle 429 for destination search gracefully
         if (destResponse.status === 429) {
               console.warn('Expedia Destination API rate limit hit');
