@@ -179,7 +179,7 @@ class HotelApiHandler {
     try {
       // Using Hotels.com.provider API (part of Expedia Group)
       // Step 1: Search for the destination ID
-         const destUrl = new URL('https://hotels-com-provider.p.rapidapi.com/v2/destinations/search');
+         const destUrl = new URL('https://hotels-com-provider.p.rapidapi.com/v2/regions');
          destUrl.search = new URLSearchParams({
                   query: city,
                   locale: 'en_US',
