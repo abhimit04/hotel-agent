@@ -229,6 +229,11 @@ class HotelApiHandler {
           }
         });
 
+        // ✅ Handle 429 for destination search gracefully
+        if (destResponse.status === 429) {
+              console.warn('Expedia Destination API rate limit hit');
+              return { hotels: [], platform: 'expedia', rateLimited: true };
+        }
         if (!destResponse.ok) {
           throw new Error(`Expedia Destination API error: ${destResponse.status}`);
         }
