@@ -199,10 +199,7 @@ class HotelApiHandler {
   async function fetchExpediaData({ city, checkIn, checkOut, guests }) {
     try {
       // Return cached result if available
-      if (destinationCache.has(city)) {
-        console.log(`Using cached destination for ${city}`);
-        var cityResult = destinationCache.get(city);
-      } else {
+
         // Step 1: Search for destination ID
         const destUrl = new URL('https://hotels-com-provider.p.rapidapi.com/v2/regions');
         destUrl.search = new URLSearchParams({
