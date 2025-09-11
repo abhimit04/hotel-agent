@@ -55,7 +55,7 @@ export default async function handler(req, res) {
       const summaryText = summaryResult.response.text().trim();
 
       return {
-        res.status(200).json({ summary: text });
+        res.status(200).json({ summary: summaryText });
       };
     } catch (err) {
       console.error("[API LOG] Gemini rerank/summary failed:", err);

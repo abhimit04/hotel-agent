@@ -131,4 +131,5 @@ function getDummyHotels(city) {
       image_url: "https://images.unsplash.com/photo-1551776235-dde6d4829808",
     },
   ];
+  }
 }
