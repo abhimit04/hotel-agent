@@ -182,7 +182,7 @@ class HotelApiHandler {
          const destUrl = new URL('https://hotels-com-provider.p.rapidapi.com/v2/destinations/search');
          destUrl.search = new URLSearchParams({
                   query: city,
-                  locale: 'en_US'
+                  locale: 'en_US',
                   domain : 'IN'
          }).toString();
 
