@@ -227,7 +227,7 @@ class HotelApiHandler {
            }
 
                        // Return gaiaId for hotel search
-
+           const { gaiaId } = await this.fetchExpediaData(searchParams);
 
           // Step 2: Use the destination ID in the hotel search
 
@@ -235,7 +235,7 @@ class HotelApiHandler {
             url.search = new URLSearchParams({
               domain: 'IN',
               locale: 'en_IN',
-              region_id: cityResult.gaiaId,
+              region_id: gaiaId,
               checkin_date: checkIn,
               checkout_date: checkOut,
               adults_number: guests.toString(),
