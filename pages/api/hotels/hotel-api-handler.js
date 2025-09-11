@@ -1,18 +1,18 @@
 // Hotel API Handler - Comprehensive hotel data fetching service
 // This module handles fetching hotel data from multiple platforms
-const destinationCache = new Map();
-async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-  for (let i = 0; i <= retries; i++) {
-    const res = await fetch(url, options);
-    if (res.status === 429) {
-      console.warn(`Rate limit hit, retrying in ${delay}ms...`);
-      await new Promise(r => setTimeout(r, delay * Math.pow(2, i))); // exponential backoff
-    } else {
-      return res;
-    }
-  }
-  throw new Error('Rate limit exceeded after retries');
-}
+//const destinationCache = new Map();
+//async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+//  for (let i = 0; i <= retries; i++) {
+//    const res = await fetch(url, options);
+//    if (res.status === 429) {
+//      console.warn(`Rate limit hit, retrying in ${delay}ms...`);
+//      await new Promise(r => setTimeout(r, delay * Math.pow(2, i))); // exponential backoff
+//    } else {
+//      return res;
+//    }
+//  }
+//  throw new Error('Rate limit exceeded after retries');
+//}
 
 
 class HotelApiHandler {
@@ -274,6 +274,15 @@ class HotelApiHandler {
 
     } catch (error) {
       console.error('Expedia API error:', error);
+
+      if (error.message.includes('429')) {
+                  console.error('API rate limit exceeded. Please try again later.');
+                  // Return a specific response to the client
+                  return {
+                      success: false,
+                      message: 'API rate limit exceeded. Please try again later.'
+                  };
+      }
       // Fallback: return mock or cached data
       return generateMockExpediaData({ city, checkIn, checkOut, guests });
     }
