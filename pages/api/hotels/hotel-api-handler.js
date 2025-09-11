@@ -207,25 +207,25 @@ class HotelApiHandler {
                   // We look for a result with `type` equal to "CITY".
                   // Add a check to ensure destData.suggestions exists and is an array.
           // Use a more flexible search logic.
-                          const suggestions = destData.suggestions;
+                   const suggestions = destData.suggestions;
+                   console.log("Expedia Suggestions:", JSON.stringify(suggestions, null, 2));
 
-                          if (!Array.isArray(suggestions) || suggestions.length === 0) {
-                              throw new Error(`No valid suggestions found for city: ${city}`);
-                          }
+                    if (!Array.isArray(suggestions) || suggestions.length === 0) {
+                                    throw new Error(`No valid suggestions found for city: ${city}`);
+                    }
 
-                          // Search for a result that is a CITY and matches the `lastSearchName`.
-                          const cityResult = suggestions.find(s =>
-                              s.type === 'CITY' &&
-                              (s.regionNames.lastSearchName.toLowerCase() === city.toLowerCase() ||
-                               s.regionNames.shortName.toLowerCase() === city.toLowerCase())
-                          );
+                                // Use a for...of loop for more control
+                    let destinationId = null;
+                    for (const suggestion of suggestions) {
+                    if (suggestion.type === 'CITY' && suggestion.regionNames.lastSearchName.toLowerCase() === city.toLowerCase()) {
+                    destinationId = suggestion.gaiaId;
+                    break; // Exit the loop once the correct ID is found
+                    }
+                    }
 
-                          if (!cityResult) {
-                              throw new Error(`Could not find a valid city ID for ${city}.`);
-                          }
-
-                          // The gaiaId is the correct destination ID.
-                          const destinationId = cityResult.gaiaId;
+                     if (!destinationId) {
+                                    throw new Error(`Could not find a valid city ID for ${city}.`);
+                     }
 
 //          if (!destData?.data?.length) {
 //            return res.status(404).json({ error: `No Expedia region found for ${city}` });
