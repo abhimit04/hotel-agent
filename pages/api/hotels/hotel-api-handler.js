@@ -26,7 +26,7 @@ class HotelApiHandler {
 
   // Main search function that coordinates all platform searches
   async searchHotels(searchParams) {
-    const { city, checkIn, checkOut, guests, platforms = ['booking', 'agoda'] } = searchParams;
+    const { city, checkIn, checkOut, guests, platforms = ['booking'] } = searchParams;
 
     console.log(`Searching hotels in ${city} for ${guests} guests from ${checkIn} to ${checkOut}`);
 
@@ -90,9 +90,9 @@ class HotelApiHandler {
       case 'booking':
         data = await this.fetchBookingData(searchParams);
         break;
-      case 'agoda':
-        data = await this.fetchAgodaData(searchParams);
-        break;
+//      case 'agoda':
+//        data = await this.fetchAgodaData(searchParams);
+//        break;
 //      case 'expedia':
 //        data = await this.fetchExpediaData(searchParams);
 //        break;
@@ -162,49 +162,49 @@ class HotelApiHandler {
   }
 
   // Agoda API integration
-  async fetchAgodaData(searchParams) {
-    const { city, checkIn, checkOut, guests } = searchParams;
-
-    try {
-      // Using travel-advisor API as alternative
-      const url = new URL('https://travel-advisor.p.rapidapi.com/hotels/list');
-            url.search = new URLSearchParams({
-              location_id: await this.getCityId(city, 'tripadvisor'),
-              adults: guests.toString(),
-              checkin: checkIn,
-              checkout: checkOut,
-              offset: '0',
-              currency: 'USD',
-              order: 'asc',
-              limit: '30',
-              sort: 'recommended'
-            }).toString();
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
-          'X-RapidAPI-Host': 'travel-advisor.p.rapidapi.com'
-        }
-
-      });
-
-      if (!response.ok) {
-        throw new Error(`Agoda API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Agoda response data:', data);
-      if (data.errors && data.errors.length > 0) {
-            console.warn('Agoda API error response:', data.errors);
-            return { hotels: [], platform: 'agoda', error: data.errors };
-      }
-      return this.parseAgodaResponse(data);
-
-    } catch (error) {
-      console.error('Agoda API error:', error);
-      return this.generateMockAgodaData(searchParams);
-    }
-  }
+//  async fetchAgodaData(searchParams) {
+//    const { city, checkIn, checkOut, guests } = searchParams;
+//
+//    try {
+//      // Using travel-advisor API as alternative
+//      const url = new URL('https://travel-advisor.p.rapidapi.com/hotels/list');
+//            url.search = new URLSearchParams({
+//              location_id: await this.getCityId(city, 'tripadvisor'),
+//              adults: guests.toString(),
+//              checkin: checkIn,
+//              checkout: checkOut,
+//              offset: '0',
+//              currency: 'USD',
+//              order: 'asc',
+//              limit: '30',
+//              sort: 'recommended'
+//            }).toString();
+//      const response = await fetch(url, {
+//        method: 'GET',
+//        headers: {
+//          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
+//          'X-RapidAPI-Host': 'travel-advisor.p.rapidapi.com'
+//        }
+//
+//      });
+//
+//      if (!response.ok) {
+//        throw new Error(`Agoda API error: ${response.status}`);
+//      }
+//
+//      const data = await response.json();
+//      console.log('Agoda response data:', data);
+//      if (data.errors && data.errors.length > 0) {
+//            console.warn('Agoda API error response:', data.errors);
+//            return { hotels: [], platform: 'agoda', error: data.errors };
+//      }
+//      return this.parseAgodaResponse(data);
+//
+//    } catch (error) {
+//      console.error('Agoda API error:', error);
+//      return this.generateMockAgodaData(searchParams);
+//    }
+//  }
 
 // Simple in-memory cache
 
