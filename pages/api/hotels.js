@@ -114,9 +114,8 @@ async function rerankAndSummarizeWithGemini(hotels, city) {
 Analyze these hotels for the city "${city}". Rank them by review score, review count, and positive review text.
 Analyze them and return the BEST 10 hotels ranked by:
 - High review score & count
-- Better descriptive reviews (e.g. "Excellent" > "Good"). Can refer reviews from the web as well.
+- Better descriptive reviews (e.g. "Excellent" > "Good").
 - Assume users want clean, safe, and well-located places.
-- Try using other parameters which help in defining a good hotel by searching web.
 Provide the below information :
 1. A JSON array of the top 10 hotels (same fields as input).
 2. A short, 3-4 sentence summary describing why these hotels are the best choices.
