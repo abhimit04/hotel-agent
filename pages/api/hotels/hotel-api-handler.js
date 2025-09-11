@@ -206,20 +206,30 @@ class HotelApiHandler {
           // Find the city result from the suggestions array.
                   // We look for a result with `type` equal to "CITY".
                   // Add a check to ensure destData.suggestions exists and is an array.
-          const citySuggestions = destData.suggestions;
+          // Use a more flexible search logic.
+                  const suggestions = destData.suggestions;
 
-           if (!Array.isArray(citySuggestions) || citySuggestions.length === 0) {
-                              throw new Error(`No valid suggestions found for city: ${city}`);
-           }
+                  if (!Array.isArray(suggestions) || suggestions.length === 0) {
+                      throw new Error(`No valid suggestions found for city: ${city}`);
+                  }
 
-           // Find the city result from the suggestions array.
-           const cityResult = citySuggestions.find(s => s.type === 'CITY');
+                  // Find the city result for India. This is more specific.
+                  const cityResult = suggestions.find(s =>
+                      s.type === 'CITY' && s.hierarchyInfo.country.isoCode3 === 'IND'
+                  );
 
-            if (!cityResult || !cityResult.gaiaId) {
-                              throw new Error(`Could not find a valid city ID for ${city}.`);
-            }
+                  // If a city in India isn't found, fall back to a less specific search.
+                  if (!cityResult) {
+                    const fallbackResult = suggestions.find(s =>
+                      s.type === 'CITY' && s.regionNames.shortName.toLowerCase().includes(city.toLowerCase())
+                    );
+                    if (!fallbackResult) {
+                       throw new Error(`Could not find a valid city ID for ${city}.`);
+                    }
+                  }
 
-            const destinationId = cityResult.gaiaId;
+                  // The gaiaId is the correct destination ID.
+                  const destinationId = cityResult.gaiaId;
 
 //          if (!destData?.data?.length) {
 //            return res.status(404).json({ error: `No Expedia region found for ${city}` });
