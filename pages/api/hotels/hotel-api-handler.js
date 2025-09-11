@@ -207,26 +207,32 @@ class HotelApiHandler {
                   // We look for a result with `type` equal to "CITY".
                   // Add a check to ensure destData.suggestions exists and is an array.
           // Use a more flexible search logic.
-                   const suggestions = destData.suggestions;
-                   console.log("Expedia Suggestions:", JSON.stringify(suggestions, null, 2));
+                   const suggestions = destData.suggestions || destData.data;
 
-                    if (!Array.isArray(suggestions) || suggestions.length === 0) {
-                                    throw new Error(`No valid suggestions found for city: ${city}`);
-                    }
+                           if (!Array.isArray(suggestions) || suggestions.length === 0) {
+                               throw new Error(`No valid suggestions found for city: ${city}`);
+                           }
 
-                                // Use a for...of loop for more control
-                    let destinationId = null;
-                    for (const suggestion of suggestions) {
-                    if (suggestion.type === 'CITY' && suggestion.regionNames.lastSearchName.toLowerCase() === city.toLowerCase()) {
-                    destinationId = suggestion.gaiaId;
-                    break; // Exit the loop once the correct ID is found
-                    }
-                    }
+                           let destinationId = null;
+                           for (const suggestion of suggestions) {
+                               if (suggestion.type === 'CITY' &&
+                                   suggestion.regionNames.lastSearchName.toLowerCase() === city.toLowerCase()) {
+                                   destinationId = suggestion.gaiaId;
+                                   break;
+                               }
+                           }
 
-                     if (!destinationId) {
+                           // As a fallback, check for other types like AIRPORT or if the city has a different name
+                           if (!destinationId) {
+                               const fallbackResult = suggestions.find(s =>
+                                   s.type === 'AIRPORT' && s.regionNames.shortName.toLowerCase().includes(city.toLowerCase())
+                               );
+                               if (fallbackResult) {
+                                   destinationId = fallbackResult.gaiaId;
+                               } else {
                                     throw new Error(`Could not find a valid city ID for ${city}.`);
-                     }
-
+                               }
+                           }
 //          if (!destData?.data?.length) {
 //            return res.status(404).json({ error: `No Expedia region found for ${city}` });
 //          }
