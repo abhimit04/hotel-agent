@@ -93,12 +93,12 @@ class HotelApiHandler {
       case 'agoda':
         data = await this.fetchAgodaData(searchParams);
         break;
-      case 'expedia':
-        data = await this.fetchExpediaData(searchParams);
-        break;
-      case 'hotels':
-        data = await this.fetchHotelsData(searchParams);
-        break;
+//      case 'expedia':
+//        data = await this.fetchExpediaData(searchParams);
+//        break;
+//      case 'hotels':
+//        data = await this.fetchHotelsData(searchParams);
+//        break;
       case 'rapidapi':
         data = await this.fetchRapidApiData(searchParams);
         break;
