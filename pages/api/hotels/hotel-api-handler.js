@@ -203,16 +203,29 @@ class HotelApiHandler {
           const destData = await destResponse.json();
           console.log("Expedia Destinations Response:", JSON.stringify(destData, null, 2));
 
-          if (!destData?.data?.length) {
-            return res.status(404).json({ error: `No Expedia region found for ${city}` });
-          }
+          // Find the city result from the suggestions array.
+                  // We look for a result with `type` equal to "CITY".
+                  const cityResult = destData.suggestions.find(
+                      s => s.type === 'CITY' && s.regionNames.shortName === city
+                  );
+
+                  if (!cityResult) {
+                      throw new Error(`Could not find a valid city for ${city}.`);
+                  }
+
+                  // The gaiaId is the correct destination ID for the hotel search.
+                  const destinationId = cityResult.gaiaId;
+
+//          if (!destData?.data?.length) {
+//            return res.status(404).json({ error: `No Expedia region found for ${city}` });
+//          }
 
            // Find the destination ID. This is a common pattern for these APIs.
-          const destinationId = destData?.suggestions[0]?.entities?.[0]?.destinationId;
-
-          if (!destinationId) {
-                          throw new Error('Could not find a valid destination ID for the city.');
-          }
+//          const destinationId = destData?.suggestions[0]?.entities?.[0]?.destinationId;
+//
+//          if (!destinationId) {
+//                          throw new Error('Could not find a valid destination ID for the city.');
+//          }
 
           // Step 2: Use the destination ID in the hotel search
 
