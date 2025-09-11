@@ -113,6 +113,7 @@ class HotelApiHandler {
     });
 
     return data;
+    console.log(`Fetched and cached data for ${platform}`);
   }
 
   // Booking.com API integration
@@ -150,6 +151,7 @@ class HotelApiHandler {
       }
 
       const data = await response.json();
+      console.log('Booking.com response data:', data);
       return this.parseBookingResponse(data);
 
     } catch (error) {
@@ -191,6 +193,7 @@ class HotelApiHandler {
       }
 
       const data = await response.json();
+      console.log('Agoda response data:', data);
       return this.parseAgodaResponse(data);
 
     } catch (error) {
