@@ -291,7 +291,7 @@ class HotelApiHandler {
     } catch (error) {
       console.error('Expedia API error:', error);
       // Fallback: return mock or cached data
-      return generateMockExpediaData({ city, checkIn, checkOut, guests });
+      return this.generateMockExpediaData({ city, checkIn, checkOut, guests });
     }
   }
   // Hotels.com direct API
