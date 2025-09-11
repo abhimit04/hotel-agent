@@ -136,10 +136,16 @@ Hotels: ${JSON.stringify(hotels)}
 
     // --- Step 2: Generate summary separately ---
     const summaryPrompt = `You are a travel assistant.
-Write a short summary (3-4 sentences) describing why these hotels are the best picks for city "${city}".
-Focus on cleanliness, location, price, and overall guest experience.
-Hotels: ${JSON.stringify(topHotels)}
-Return ONLY a short summary string, no extra words.`;
+    Write a well-formatted summary for the top hotels in "${city}". Focus on cleanliness, location, price, and overall guest experience.
+    Use **Markdown** and make it easy to scan:
+                          - Begin with a short intro sentence.
+                          - Then list the top 3-5 hotels as bullet points with this style:
+                            • **Hotel Name** — short description, key highlight, and rating (if available).
+                          - End with a short closing remark (1 line) encouraging booking.
+
+                          Hotels: ${JSON.stringify(topHotels)}
+
+Return ONLY the Markdown summary (no JSON, no explanations).`;
 
     const summaryResult = await model.generateContent(summaryPrompt);
     const summaryText = summaryResult.response.text().trim();
