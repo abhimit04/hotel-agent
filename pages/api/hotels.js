@@ -115,8 +115,9 @@ async function rerankWithGemini(hotels) {
 You are a travel assistant. Here is a list of hotels with name, review score, review count, and review text.
 Analyze them and return the BEST 10 hotels ranked by:
 - High review score & count
-- Better descriptive reviews (e.g. "Excellent" > "Good")
+- Better descriptive reviews (e.g. "Excellent" > "Good"). Can refer reviews from the web as well.
 - Assume users want clean, safe, and well-located places.
+- Try using other parameters which help in defining a good hotel by searching web.
 
 Return as JSON with the same structure as input.
 Hotels:
@@ -125,6 +126,7 @@ ${JSON.stringify(hotels)}
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
+
 
     try {
       const parsed = JSON.parse(text);
