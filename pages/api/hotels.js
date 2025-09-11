@@ -90,13 +90,13 @@ export default async function handler(req, res) {
     // --- Step 4: AI Rerank + Summary ---
 //    const aiResult = await rerankAndSummarizeWithGemini(sortedHotels.slice(0, 20), city);
 //
-//    return res.status(200).json({
+    return res.status(200).json({ hotels: sortedHotels });
 //      hotels: aiResult.hotels,
 //      summary: aiResult.summary,
 //    });
    } catch (error) {
      console.error("[API LOG] Unexpected error:", error);
-     return res.status(200).json(hotels: getDummyHotels(city));
+     return res.status(200).json({ hotels: getDummyHotels(city) });
    }
 
  }
