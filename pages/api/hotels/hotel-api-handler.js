@@ -191,8 +191,8 @@ class HotelApiHandler {
                   headers: {
                       'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
                       'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
-          }
-          });
+         }
+         });
 
 //          const destData = await destResponse.json();
 //          console.log("Expedia Destinations Response:", JSON.stringify(destData, null, 2));
@@ -208,39 +208,30 @@ class HotelApiHandler {
                   // Add a check to ensure destData.suggestions exists and is an array.
           // Use a more flexible search logic.
 
-                   const suggestions = response?.data || [];
+           const suggestions = destData?.data || destData?.entities || [];
 
-                   console.log("Expedia Suggestions:", JSON.stringify(suggestions, null, 2));
+           console.log("Expedia Suggestions:", JSON.stringify(suggestions, null, 2));
 
-                       if (!Array.isArray(suggestions) || suggestions.length === 0) {
+           if (!Array.isArray(suggestions) || suggestions.length === 0) {
                          throw new Error(`No suggestions found for query: ${query}`);
-                       }
+           }
 
                        // Prefer CITY type results, fallback to AIRPORT
-                       const cityResult = suggestions.find(r => r.type === "CITY")
+           const cityResult = suggestions.find(r => r.type === "CITY")
                                         || suggestions.find(r => r.type === "AIRPORT");
 
-                       console.log("Expedia City Result:", JSON.stringify(cityResult, null, 2));
+           console.log("Expedia City Result:", JSON.stringify(cityResult, null, 2));
 
-                       if (!cityResult) {
+           if (!cityResult) {
                          throw new Error(`No valid suggestions found for city: ${query}`);
-                       }
+           }
 
                        // Return gaiaId for hotel search
-                       return {
-                         gaiaId: cityResult.gaiaId,
-                         name: cityResult.regionNames?.displayName
-                       };
-
-                     } catch (err) {
-                       console.error("Expedia API error:", err);
-                       throw err;
-                     }
 
 
           // Step 2: Use the destination ID in the hotel search
 
-      const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
+            const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
             url.search = new URLSearchParams({
               domain: 'IN',
               locale: 'en_IN',
@@ -254,9 +245,9 @@ class HotelApiHandler {
 
              console.log('Expedia API URL:', url.toString());
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
+           const response = await fetch(url, {
+               method: 'GET',
+             headers: {
           'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
           'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
         }
