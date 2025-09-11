@@ -207,32 +207,30 @@ class HotelApiHandler {
                   // We look for a result with `type` equal to "CITY".
                   // Add a check to ensure destData.suggestions exists and is an array.
           // Use a more flexible search logic.
-                   const suggestions = destData.suggestions || destData.data;
+                   const suggestions = response?.data || [];
+                       if (!Array.isArray(suggestions) || suggestions.length === 0) {
+                         throw new Error(`No suggestions found for query: ${query}`);
+                       }
 
-                           if (!Array.isArray(suggestions) || suggestions.length === 0) {
-                               throw new Error(`No valid suggestions found for city: ${city}`);
-                           }
+                       // Prefer CITY type results, fallback to AIRPORT
+                       const cityResult = suggestions.find(r => r.type === "CITY")
+                                        || suggestions.find(r => r.type === "AIRPORT");
 
-                           let destinationId = null;
-                           for (const suggestion of suggestions) {
-                               if (suggestion.type === 'CITY' &&
-                                   suggestion.regionNames.lastSearchName.toLowerCase() === city.toLowerCase()) {
-                                   destinationId = suggestion.gaiaId;
-                                   break;
-                               }
-                           }
+                       if (!cityResult) {
+                         throw new Error(`No valid suggestions found for city: ${query}`);
+                       }
 
-                           // As a fallback, check for other types like AIRPORT or if the city has a different name
-                           if (!destinationId) {
-                               const fallbackResult = suggestions.find(s =>
-                                   s.type === 'AIRPORT' && s.regionNames.shortName.toLowerCase().includes(city.toLowerCase())
-                               );
-                               if (fallbackResult) {
-                                   destinationId = fallbackResult.gaiaId;
-                               } else {
-                                    throw new Error(`Could not find a valid city ID for ${city}.`);
-                               }
-                           }
+                       // Return gaiaId for hotel search
+                       return {
+                         gaiaId: cityResult.gaiaId,
+                         name: cityResult.regionNames?.displayName
+                       };
+
+                     } catch (err) {
+                       console.error("Expedia API error:", err);
+                       throw err;
+                     }
+                   }
 //          if (!destData?.data?.length) {
 //            return res.status(404).json({ error: `No Expedia region found for ${city}` });
 //          }
@@ -250,7 +248,7 @@ class HotelApiHandler {
             url.search = new URLSearchParams({
               domain: 'IN',
               locale: 'en_IN',
-              destination: destinationId,
+              destination: cityResult.gaiaId,
               checkin_date: checkIn,
               checkout_date: checkOut,
               adults: guests.toString(),
