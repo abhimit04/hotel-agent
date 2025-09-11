@@ -17,6 +17,7 @@ export default function HotelLanding() {
     try {
       const res = await fetch(`/api/hotels?city=${encodeURIComponent(city)}&checkin=${checkin}&checkout=${checkout}`);
       const data = await res.json();
+      console.log('API response:', data);
       if (!data.hotels || data.hotels.length === 0) {
         setError('No hotels found');
       } else {
