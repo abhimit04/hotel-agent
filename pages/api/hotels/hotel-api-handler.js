@@ -205,16 +205,21 @@ class HotelApiHandler {
 
           // Find the city result from the suggestions array.
                   // We look for a result with `type` equal to "CITY".
-                  const cityResult = destData.suggestions.find(
-                      s => s.type === 'CITY' && s.regionNames.shortName === city
-                  );
+                  // Add a check to ensure destData.suggestions exists and is an array.
+          const citySuggestions = destData.suggestions;
 
-                  if (!cityResult) {
-                      throw new Error(`Could not find a valid city for ${city}.`);
-                  }
+           if (!Array.isArray(citySuggestions) || citySuggestions.length === 0) {
+                              throw new Error(`No valid suggestions found for city: ${city}`);
+           }
 
-                  // The gaiaId is the correct destination ID for the hotel search.
-                  const destinationId = cityResult.gaiaId;
+           // Find the city result from the suggestions array.
+           const cityResult = citySuggestions.find(s => s.type === 'CITY');
+
+            if (!cityResult || !cityResult.gaiaId) {
+                              throw new Error(`Could not find a valid city ID for ${city}.`);
+            }
+
+            const destinationId = cityResult.gaiaId;
 
 //          if (!destData?.data?.length) {
 //            return res.status(404).json({ error: `No Expedia region found for ${city}` });
