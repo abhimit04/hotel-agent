@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
     const response = await fetch(url, {
       headers: {
-        "X-RapidAPI-Key": process.env.BOOKING_API_KEY,
+        "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
         "X-RapidAPI-Host": "booking-com.p.rapidapi.com",
       },
     });
