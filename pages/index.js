@@ -186,7 +186,7 @@ export default function HotelLanding() {
           <div className="flex items-center gap-3 bg-white bg-opacity-20 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-white border-opacity-30 mb-8">
             <div className="animate-spin rounded-full h-6 w-6 border-2 border-cyan-400 border-t-transparent"></div>
             <p className="text-white font-medium">Searching for the best hotels...</p>
-            <p className="text-white font-medium">This might take 25-30 sec as AI analysis happening in the background...</p>
+            <p className="text-white font-medium">This might take 15-20 sec depending on API response & AI analysis...</p>
           </div>
         )}
 
