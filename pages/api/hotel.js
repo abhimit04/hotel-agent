@@ -1,21 +1,17 @@
-import 'dotenv/config';
 import fetch from 'node-fetch';
 import crypto from 'crypto';
-import { orderBy } from 'lodash';
+import orderBy from 'lodash/orderBy';
 
-// Environment variables
+// Environment variables (Vercel injects these automatically)
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '';
-
 const GEMINI_ENDPOINT = process.env.GEMINI_ENDPOINT || '';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
-// Utility to generate stable hotel id
 function hotelId(h) {
   const key = `${h.name}||${h.address || ''}||${h.latitude || ''}||${h.longitude || ''}`;
   return crypto.createHash('sha1').update(key).digest('hex');
 }
 
-// Normalize Booking.com API response
 function normalizeBookingResponse(json) {
   const list = json.results || [];
   return list.map(item => {
@@ -31,7 +27,6 @@ function normalizeBookingResponse(json) {
   }).filter(h => h.name);
 }
 
-// Fetch top hotels from Booking.com RapidAPI
 async function fetchBookingHotels(city, checkin=null, checkout=null, topN=5) {
   const url = new URL(`https://booking-com.p.rapidapi.com/v1/hotels/search`);
   url.searchParams.set('city_name', city);
@@ -57,7 +52,6 @@ async function fetchBookingHotels(city, checkin=null, checkout=null, topN=5) {
   }
 }
 
-// Deduplicate by name + rounded coordinates
 function dedupeHotels(hotels) {
   const sorted = orderBy(hotels, ['review_score','review_count'], ['desc','desc']);
   const uniq = [];
@@ -72,7 +66,6 @@ function dedupeHotels(hotels) {
   return uniq;
 }
 
-// Heuristic score if Gemini not used
 function heuristicScore(h) {
   let rs = Number(h.review_score || 0);
   if (rs > 10) rs = rs / 10 * 5;
@@ -82,7 +75,6 @@ function heuristicScore(h) {
   return Math.round(score*10)/10;
 }
 
-// Dummy Gemini call (can implement actual Gemini API call)
 async function rankWithGemini(hotels) {
   return hotels.map(h => ({...h, agent_score: heuristicScore(h)}));
 }
