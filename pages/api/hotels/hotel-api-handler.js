@@ -55,8 +55,9 @@ class HotelApiHandler {
         return platformData;
       } catch (error) {
         console.error(`Error fetching from ${platform}:`, error);
-        results.errors.push({ platform, error: error.message });
-        return { hotels: [], platform, error: error.message };
+        const safeData = { hotels: [], platform, error: error.message };
+        results.errors.push(safeData);
+        return safeData;
       }
     });
 
@@ -83,9 +84,10 @@ class HotelApiHandler {
 
     if (this.apiUsageCounts[platform] >= this.apiUsageLimits[platform]) {
           console.warn(`${platform} usage limit reached, skipping API call`);
-          return { hotels: [], platform };
+          return { hotels: [], platform,  skipped: true };
     }
     let data;
+    try{
     switch (platform) {
       case 'booking':
         data = await this.fetchBookingData(searchParams);
@@ -103,8 +105,18 @@ class HotelApiHandler {
         data = await this.fetchRapidApiData(searchParams);
         break;
       default:
-        throw new Error(`Unsupported platform: ${platform}`);
+        console.warn(`Skipping unsupported platform: ${platform}`);
+        return { hotels: [], platform, skipped: true };
     }
+    if (!data || !Array.isArray(data.hotels)) {
+          console.warn(`${platform} returned invalid data, defaulting to empty`);
+          data = { hotels: [], platform };
+    }
+    }catch (err) {
+        console.error(`Error fetching from ${platform}:`, err);
+        data = { hotels: [], platform, error: err.message };
+      }
+
 
     // Cache the result
     this.cache.set(cacheKey, {
