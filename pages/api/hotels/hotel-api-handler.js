@@ -193,11 +193,15 @@ class HotelApiHandler {
                       'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
           }
           });
+
+          const destData = await destResponse.json();
+          console.log("Expedia Destinations Response:", JSON.stringify(destData, null, 2));
+
           if (!destResponse.ok) {
                           throw new Error(`Expedia Destination API error: ${destResponse.status}`);
           }
 
-          const destData = await destResponse.json();
+
 
                       // Find the destination ID. This is a common pattern for these APIs.
           const destinationId = destData?.suggestions[0]?.entities?.[0]?.destinationId;
