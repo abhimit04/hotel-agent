@@ -203,8 +203,11 @@ class HotelApiHandler {
           const destData = await destResponse.json();
           console.log("Expedia Destinations Response:", JSON.stringify(destData, null, 2));
 
+          if (!destData?.data?.length) {
+            return res.status(404).json({ error: `No Expedia region found for ${city}` });
+          }
 
-                      // Find the destination ID. This is a common pattern for these APIs.
+           // Find the destination ID. This is a common pattern for these APIs.
           const destinationId = destData?.suggestions[0]?.entities?.[0]?.destinationId;
 
           if (!destinationId) {
