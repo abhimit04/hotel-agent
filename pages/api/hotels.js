@@ -90,78 +90,22 @@ export default async function handler(req, res) {
     const sortedHotels = orderBy(mappedHotels, ["review_score", "review_count"], ["desc", "desc"]);
 
     // --- Step 4: AI Rerank + Summary ---
-    const aiResult = await rerankAndSummarizeWithGemini(sortedHotels.slice(0, 20), city);
+//    const aiResult = await rerankAndSummarizeWithGemini(sortedHotels.slice(0, 20), city);
+//
+//    return res.status(200).json({
+//      hotels: aiResult.hotels,
+//      summary: aiResult.summary,
+//    });
+//  } catch (error) {
+//    console.error("[API LOG] Unexpected error:", error);
+//    return res.status(200).json({
+//      hotels: getDummyHotels(city),
+//      summary: `Internal error, fallback data used`,
+//    });
+//  }
+//}
 
-    return res.status(200).json({
-      hotels: aiResult.hotels,
-      summary: aiResult.summary,
-    });
-  } catch (error) {
-    console.error("[API LOG] Unexpected error:", error);
-    return res.status(200).json({
-      hotels: getDummyHotels(city),
-      summary: `Internal error, fallback data used`,
-    });
-  }
-}
 
-async function rerankAndSummarizeWithGemini(hotels, city) {
-  try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-    // --- Step 1: Rerank hotels ---
-    const rerankPrompt = `You are a travel assistant. Here is a list of hotels with name, review score, review count, and review text posted by travellers.
-Given these hotels for city "${city}", Analyse them and return ONLY the top 10 ranked by:
-- Review score (higher is better)
-- Review count (more is better)
-- Positive review text (e.g., "Excellent" > "Good")
-
-Return strictly as JSON with this format:
-{
-  "hotels": [ ...top 10 hotels... ]
-}
-
-Hotels: ${JSON.stringify(hotels)}
-`;
-
-    const rerankResult = await model.generateContent(rerankPrompt);
-    let topHotels = hotels.slice(0, 10); // fallback
-    try {
-      const parsed = JSON.parse(rerankResult.response.text());
-      topHotels = parsed.hotels || topHotels;
-    } catch (err) {
-      console.error("[API LOG] Rerank response parse failed, using numeric sort fallback");
-    }
-
-    // --- Step 2: Generate summary separately ---
-    const summaryPrompt = `You are a travel assistant.
-    Write a well-formatted summary for the top hotels in "${city}". Focus on cleanliness, location, price, and overall guest experience.
-    Provide a structured analysis in Markdown format with these sections:
-                          - Begin with a short intro sentence.
-                          - Then list the top 3-5 hotels as bullet points with this style:
-                           -Hotel Name — short description, key highlight, and rating (if available).
-                          - End with a short closing remark (1 line) encouraging booking.
-
-                          Hotels: ${JSON.stringify(topHotels)}
-
-Return ONLY the Markdown summary (no JSON, no explanations).`;
-
-    const summaryResult = await model.generateContent(summaryPrompt);
-    const summaryText = summaryResult.response.text().trim();
-
-    return {
-      hotels: topHotels,
-      summary: summaryText || `Top hotels in ${city} selected based on reviews.`,
-    };
-  } catch (err) {
-    console.error("[API LOG] Gemini rerank/summary failed:", err);
-    return {
-      hotels: hotels.slice(0, 10),
-      summary: `Top hotels in ${city} selected based on review score & count.`,
-    };
-  }
-}
 
 
 function getDummyHotels(city) {
