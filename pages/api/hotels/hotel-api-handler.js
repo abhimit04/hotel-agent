@@ -9,6 +9,7 @@ class HotelApiHandler {
     this.cacheExpiry = 30 * 60 * 1000; // 30 minutes
   }
 
+const destinationCache = new Map();
   // Main search function that coordinates all platform searches
   async searchHotels(searchParams) {
     const { city, checkIn, checkOut, guests, platforms = ['booking', 'agoda', 'expedia'] } = searchParams;
@@ -173,7 +174,7 @@ class HotelApiHandler {
   }
 
 // Simple in-memory cache
-const destinationCache = new Map();
+
 
 /**
  * Fetch with retry on 429 errors
