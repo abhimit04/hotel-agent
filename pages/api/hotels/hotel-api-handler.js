@@ -172,104 +172,108 @@ class HotelApiHandler {
     }
   }
 
+// Simple in-memory cache
+const destinationCache = new Map();
+
+/**
+ * Fetch with retry on 429 errors
+ */
+async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+  for (let i = 0; i <= retries; i++) {
+    const res = await fetch(url, options);
+    if (res.status === 429) {
+      console.warn(`Rate limit hit, retrying in ${delay}ms...`);
+      await new Promise(r => setTimeout(r, delay * Math.pow(2, i))); // exponential backoff
+    } else {
+      return res;
+    }
+  }
+  throw new Error('Rate limit exceeded after retries');
+}
+
   // Expedia API integration
-  async fetchExpediaData(searchParams) {
-    const { city, checkIn, checkOut, guests } = searchParams;
-
+  async function fetchExpediaData({ city, checkIn, checkOut, guests }) {
     try {
-      // Using Hotels.com.provider API (part of Expedia Group)
-      // Step 1: Search for the destination ID
-         const destUrl = new URL('https://hotels-com-provider.p.rapidapi.com/v2/regions');
-         destUrl.search = new URLSearchParams({
-                  query: city,
-                  locale: 'en_IN',
-                  domain : 'IN'
-         }).toString();
+      // Return cached result if available
+      if (destinationCache.has(city)) {
+        console.log(`Using cached destination for ${city}`);
+        var cityResult = destinationCache.get(city);
+      } else {
+        // Step 1: Search for destination ID
+        const destUrl = new URL('https://hotels-com-provider.p.rapidapi.com/v2/regions');
+        destUrl.search = new URLSearchParams({
+          query: city,
+          locale: 'en_IN',
+          domain: 'IN'
+        }).toString();
 
-         const destResponse = await fetch(destUrl, {
-                  method: 'GET',
-                  headers: {
-                      'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
-                      'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
-         }
-         });
-
-//          const destData = await destResponse.json();
-//          console.log("Expedia Destinations Response:", JSON.stringify(destData, null, 2));
-
-          if (!destResponse.ok) {
-                          throw new Error(`Expedia Destination API error: ${destResponse.status}`);
+        const destResponse = await fetchWithRetry(destUrl, {
+          method: 'GET',
+          headers: {
+            'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+            'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
           }
-          const destData = await destResponse.json();
-          console.log("Expedia Destinations Response:", JSON.stringify(destData, null, 2));
+        });
 
-          // Find the city result from the suggestions array.
-                  // We look for a result with `type` equal to "CITY".
-                  // Add a check to ensure destData.suggestions exists and is an array.
-          // Use a more flexible search logic.
+        if (!destResponse.ok) {
+          throw new Error(`Expedia Destination API error: ${destResponse.status}`);
+        }
 
-           const suggestions = destData?.data || destData?.entities || [];
+        const destData = await destResponse.json();
+        const suggestions = destData?.data || [];
 
-           console.log("Expedia Suggestions:", JSON.stringify(suggestions, null, 2));
+        if (!Array.isArray(suggestions) || suggestions.length === 0) {
+          throw new Error(`No suggestions found for city: ${city}`);
+        }
 
-           if (!Array.isArray(suggestions) || suggestions.length === 0) {
-                         throw new Error(`No suggestions found for query: ${query}`);
-           }
+        // Prefer CITY type results, fallback to AIRPORT
+        cityResult = suggestions.find(r => r.type === 'CITY') || suggestions.find(r => r.type === 'AIRPORT');
 
-                       // Prefer CITY type results, fallback to AIRPORT
-           const cityResult = suggestions.find(r => r.type === "CITY")
-                                        || suggestions.find(r => r.type === "AIRPORT");
+        if (!cityResult) {
+          throw new Error(`No valid suggestions found for city: ${city}`);
+        }
 
-           console.log("Expedia City Result:", JSON.stringify(cityResult, null, 2));
+        // Cache the result
+        destinationCache.set(city, cityResult);
+      }
 
-           if (!cityResult) {
-                         throw new Error(`No valid suggestions found for city: ${query}`);
-           }
+      // Step 2: Use the destination ID in the hotel search
+      const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
+      url.search = new URLSearchParams({
+        domain: 'IN',
+        locale: 'en_IN',
+        region_id: cityResult.gaiaId,      // note: region_id for search
+        checkin_date: checkIn,
+        checkout_date: checkOut,
+        adults_number: guests,
+        children_number: 0,
+        rooms_number: 1,
+        sort_order: 'REVIEW',
+        currency: 'INR',
+        page_number: 1
+      }).toString();
 
-                       // Return gaiaId for hotel search
-           const gaiaId = cityResult.gaiaId;
-           console.log("Expedia Gaia ID:", gaiaId);
-
-          // Step 2: Use the destination ID in the hotel search
-
-            const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
-            url.search = new URLSearchParams({
-              domain: 'IN',
-              locale: 'en_IN',
-              region_id: gaiaId,
-              checkin_date: checkIn,
-              checkout_date: checkOut,
-              adults_number: guests.toString(),
-              children: '0',
-              rooms: '1',
-              sort_order: 'REVIEW',
-              page_number: '1'
-            }).toString();
-
-             console.log('Expedia API URL:', url.toString());
-
-           const response = await fetch(url, {
-               method: 'GET',
-             headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
           'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
         }
-//
       });
 
       if (!response.ok) {
-        throw new Error(`Expedia API error: ${response.status}`);
+        throw new Error(`Expedia Hotels API error: ${response.status}`);
       }
 
       const data = await response.json();
-      return this.parseExpediaResponse(data);
+      return parseExpediaResponse(data);
 
     } catch (error) {
       console.error('Expedia API error:', error);
-      return this.generateMockExpediaData(searchParams);
+      // Fallback: return mock or cached data
+      return generateMockExpediaData({ city, checkIn, checkOut, guests });
     }
   }
-
   // Hotels.com direct API
 //  async fetchHotelsData(searchParams) {
 //    const { city, checkIn, checkOut, guests } = searchParams;
