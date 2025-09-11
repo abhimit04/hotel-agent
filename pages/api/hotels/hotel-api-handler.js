@@ -235,10 +235,11 @@ class HotelApiHandler {
             url.search = new URLSearchParams({
               domain: 'IN',
               locale: 'en_IN',
-              destination: cityResult.gaiaId,
+              region_id: cityResult.gaiaId,
               checkin_date: checkIn,
               checkout_date: checkOut,
               adults: guests.toString(),
+              children: '0',
               sort_order: 'REVIEW',
               page_number: '1'
             }).toString();
