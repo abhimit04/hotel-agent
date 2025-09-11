@@ -228,6 +228,7 @@ class HotelApiHandler {
 
                        // Return gaiaId for hotel search
            const { gaiaId } = await this.fetchExpediaData(searchParams);
+           console.log("Expedia Gaia ID:", gaiaId);
 
           // Step 2: Use the destination ID in the hotel search
 
