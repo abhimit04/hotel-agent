@@ -43,6 +43,7 @@ async function fetchHotels(dest_id, dest_type, checkin, checkout, adults = 1, to
   url.searchParams.set('dest_type', dest_type);
   url.searchParams.set('checkin_date', checkin);
   url.searchParams.set('checkout_date', checkout);
+  url.searchParams.set('room_number', '1');
   url.searchParams.set('adults_number', adults.toString());
   url.searchParams.set('units', 'metric');
   url.searchParams.set('filter_by_currency', 'INR');
