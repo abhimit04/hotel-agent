@@ -278,7 +278,11 @@ class HotelApiHandler {
       });
 
       if (!response.ok) {
-        throw new Error(`Expedia Hotels API error: ${response.status}`);
+              if (response.status === 429) {
+                console.warn('Expedia API rate limit reached');
+                return { hotels: [], platform: 'expedia' };
+              }
+              throw new Error(`Expedia Hotels API error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -286,15 +290,6 @@ class HotelApiHandler {
 
     } catch (error) {
       console.error('Expedia API error:', error);
-
-      if (error.message.includes('429')) {
-                  console.error('API rate limit exceeded. Please try again later.');
-                  // Return a specific response to the client
-                  return {
-                      success: false,
-                      message: 'API rate limit exceeded. Please try again later.'
-                  };
-      }
       // Fallback: return mock or cached data
       return generateMockExpediaData({ city, checkIn, checkOut, guests });
     }
