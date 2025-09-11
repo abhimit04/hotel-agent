@@ -238,8 +238,9 @@ class HotelApiHandler {
               region_id: cityResult.gaiaId,
               checkin_date: checkIn,
               checkout_date: checkOut,
-              adults: guests.toString(),
+              adults_number: guests.toString(),
               children: '0',
+              rooms: '1',
               sort_order: 'REVIEW',
               page_number: '1'
             }).toString();
