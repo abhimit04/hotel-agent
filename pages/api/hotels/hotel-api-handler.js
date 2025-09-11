@@ -182,7 +182,7 @@ class HotelApiHandler {
          const destUrl = new URL('https://hotels-com-provider.p.rapidapi.com/v2/regions');
          destUrl.search = new URLSearchParams({
                   query: city,
-                  locale: 'en_US',
+                  locale: 'en_IN',
                   domain : 'IN'
          }).toString();
 
@@ -215,7 +215,7 @@ class HotelApiHandler {
       const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
             url.search = new URLSearchParams({
               domain: 'IN',
-              locale: 'en_US',
+              locale: 'en_IN',
               destination: destinationId,
               checkin_date: checkIn,
               checkout_date: checkOut,
