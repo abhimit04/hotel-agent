@@ -207,7 +207,11 @@ class HotelApiHandler {
                   // We look for a result with `type` equal to "CITY".
                   // Add a check to ensure destData.suggestions exists and is an array.
           // Use a more flexible search logic.
+
                    const suggestions = response?.data || [];
+
+                   console.log("Expedia Suggestions:", JSON.stringify(suggestions, null, 2));
+
                        if (!Array.isArray(suggestions) || suggestions.length === 0) {
                          throw new Error(`No suggestions found for query: ${query}`);
                        }
@@ -215,6 +219,8 @@ class HotelApiHandler {
                        // Prefer CITY type results, fallback to AIRPORT
                        const cityResult = suggestions.find(r => r.type === "CITY")
                                         || suggestions.find(r => r.type === "AIRPORT");
+
+                       console.log("Expedia City Result:", JSON.stringify(cityResult, null, 2));
 
                        if (!cityResult) {
                          throw new Error(`No valid suggestions found for city: ${query}`);
