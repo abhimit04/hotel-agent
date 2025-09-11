@@ -1,125 +1,73 @@
-import fetch from 'node-fetch';
-import orderBy from 'lodash/orderBy';
-import crypto from 'crypto';
+// pages/api/hotel.js
+import fetch from "node-fetch";
+import orderBy from "lodash/orderBy";
 
-const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
+export default async function handler(req, res) {
+  const { city } = req.query;
 
-// Helper to generate unique hotel ID
-const getHotelId = ({ name, address, latitude, longitude }) =>
-  crypto.createHash('sha1').update(`${name}||${address || ''}||${latitude || ''}||${longitude || ''}`).digest('hex');
-
-// Fetch dest_id for a city
-async function fetchDestinationId(city) {
-  const url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(city)}&locale=en-us`;
-
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'X-RapidAPI-Key': RAPIDAPI_KEY,
-        'X-RapidAPI-Host': 'booking-com.p.rapidapi.com',
-      },
-    });
-
-    const data = await res.json();
-    if (!data.length) {
-      console.log('[API LOG] No destination found for city:', city);
-      return null;
-    }
-
-    // Take first matching destination
-    const dest = data[0];
-    return { dest_id: dest.dest_id, dest_type: dest.dest_type };
-
-  } catch (err) {
-    console.error('[API LOG] Error fetching destination ID:', err);
-    return null;
+  if (!city) {
+    return res.status(400).json({ error: "City parameter is required" });
   }
-}
 
-// Fetch hotels using dest_id and mandatory parameters
-async function fetchHotels(dest_id, dest_type, checkin, checkout, adults = 1, topN = 10) {
-  const url = new URL('https://booking-com.p.rapidapi.com/v1/hotels/search');
-  url.searchParams.set('dest_id', dest_id);
-  url.searchParams.set('dest_type', dest_type);
-  url.searchParams.set('checkin_date', checkin);
-  url.searchParams.set('checkout_date', checkout);
-  url.searchParams.set('room_number', '1');
-  url.searchParams.set('adults_number', adults.toString());
-  url.searchParams.set('units', 'metric');
-  url.searchParams.set('filter_by_currency', 'INR');
-  url.searchParams.set('order_by', 'popularity');
-  url.searchParams.set('locale', 'en-us');
+  console.log(`[API LOG] Fetching hotels for city: ${city}`);
 
   try {
-    const res = await fetch(url.toString(), {
+    // --- Step 1: Fetch from Booking.com API ---
+    const url = `https://booking-com.p.rapidapi.com/v1/hotels/search-by-coordinates?dest_type=city&order_by=popularity&filter_by_currency=INR&locale=en-gb&adults_number=1&units=metric&room_number=1&checkin_date=2025-09-20&checkout_date=2025-09-21&latitude=28.6139&longitude=77.2090`;
+
+    const response = await fetch(url, {
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_KEY,
-        'X-RapidAPI-Host': 'booking-com.p.rapidapi.com',
-        'Accept': 'application/json',
+        "X-RapidAPI-Key": process.env.BOOKING_API_KEY,
+        "X-RapidAPI-Host": "booking-com.p.rapidapi.com",
       },
     });
 
-    const rawText = await res.text();
-    console.log('[API LOG] Raw Booking.com search response:', rawText.slice(0, 500), '...');
-
-    if (!res.ok) {
-      console.error('[API LOG] Booking.com search API returned error:', res.status);
-      return [];
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[API LOG] Booking.com API returned error status: ${response.status}`);
+      console.error(`[API LOG] Error body: ${errorText}`);
+      return res.status(500).json({ error: "Failed to fetch hotels" });
     }
 
-    const json = JSON.parse(rawText);
-    const hotels = (json.results || []).map(h => ({
-      id: getHotelId(h),
-      name: h.hotel_name,
-      address: h.address,
+    const json = await response.json();
+    console.log("[API LOG] Raw Booking.com search response keys:", Object.keys(json));
+
+    // --- Step 2: Validate result key ---
+    const results = json.result || json.results || [];
+    console.log(`[API LOG] Total hotels received: ${results.length}`);
+
+    if (results.length === 0) {
+      return res.status(200).json({ hotels: [], message: "No hotels found" });
+    }
+
+    // Debug first 3 hotels before filtering
+    console.log("[API LOG] First 3 raw hotels:", JSON.stringify(results.slice(0, 3), null, 2));
+
+    // --- Step 3: Transform data safely ---
+    const mappedHotels = results.map(h => ({
+      id: h.hotel_id,
+      name: h.hotel_name || h.name,
+      address: h.address || h.address_trans || "",
       latitude: h.latitude,
       longitude: h.longitude,
-      price: h.price_breakdown?.gross_price || null,
-      review_score: Number(h.review_score || 0),
-      review_count: Number(h.review_count || 0),
+      price: h.price_breakdown?.gross_price ?? null,
+      currency: h.price_breakdown?.currency ?? "INR",
+      review_score: Number(h.review_score) || 0,
+      review_count: Number(h.review_count) || 0,
+      image_url: h.max_1440_photo || h.main_photo_url || null,
     }));
 
-    return orderBy(hotels, ['review_score', 'review_count'], ['desc', 'desc']).slice(0, topN);
+    // --- Step 4: Sort by review score + review count ---
+    const sortedHotels = orderBy(mappedHotels, ["review_score", "review_count"], ["desc", "desc"]);
 
-  } catch (err) {
-    console.error('[API LOG] Error fetching hotels:', err);
-    return [];
-  }
-}
+    // --- Step 5: Return top 10 hotels ---
+    const topHotels = sortedHotels.slice(0, 10);
+    console.log(`[API LOG] Returning ${topHotels.length} top hotels to frontend`);
 
-// API route handler
-export default async function handler(req, res) {
-  const city = req.query.city;
-  if (!city) return res.status(400).json({ error: 'Missing city parameter, use ?city=CityName' });
+    return res.status(200).json({ hotels: topHotels });
 
-  console.log('[API LOG] Fetching hotels for city:', city);
-
-  try {
-    const destination = await fetchDestinationId(city);
-    if (!destination) return res.status(404).json({ error: 'Destination not found for city' });
-
-    // Set check-in/check-out dates (tomorrow and day after)
-    const today = new Date();
-    const checkin = new Date(today);
-    checkin.setDate(today.getDate() + 1);
-    const checkout = new Date(today);
-    checkout.setDate(today.getDate() + 2);
-
-    const formatDate = date => date.toISOString().split('T')[0];
-    const hotels = await fetchHotels(
-      destination.dest_id,
-      destination.dest_type,
-      formatDate(checkin),
-      formatDate(checkout)
-    );
-
-    if (!hotels.length) return res.status(404).json({ error: 'No hotels found for city' });
-
-    console.log('[API LOG] Fetched hotels count:', hotels.length);
-    res.status(200).json({ city, count: hotels.length, hotels });
-
-  } catch (err) {
-    console.error('[API LOG] Unhandled error in /api/hotels:', err);
-    res.status(500).json({ error: 'Failed to fetch hotels', details: err.message });
+  } catch (error) {
+    console.error("[API LOG] Unexpected error:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
