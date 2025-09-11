@@ -227,15 +227,17 @@ class HotelApiHandler {
           throw new Error(`No suggestions found for city: ${city}`);
         }
 
-        // Prefer CITY type results, fallback to AIRPORT
+        // **FIX START**
+        // Declare cityResult with `const` or `let`
         const cityResult = suggestions.find(r => r.type === 'CITY') || suggestions.find(r => r.type === 'AIRPORT');
+        // **FIX END**
 
         if (!cityResult) {
           throw new Error(`No valid suggestions found for city: ${city}`);
         }
 
         // Cache the result
-       // destinationCache.set(city, cityResult);
+        // destinationCache.set(city, cityResult);
 
 
       // Step 2: Use the destination ID in the hotel search
