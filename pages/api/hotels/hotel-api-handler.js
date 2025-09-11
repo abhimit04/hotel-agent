@@ -1,19 +1,5 @@
 // Hotel API Handler - Comprehensive hotel data fetching service
 // This module handles fetching hotel data from multiple platforms
-//const destinationCache = new Map();
-//async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-//  for (let i = 0; i <= retries; i++) {
-//    const res = await fetch(url, options);
-//    if (res.status === 429) {
-//      console.warn(`Rate limit hit, retrying in ${delay}ms...`);
-//      await new Promise(r => setTimeout(r, delay * Math.pow(2, i))); // exponential backoff
-//    } else {
-//      return res;
-//    }
-//  }
-//  throw new Error('Rate limit exceeded after retries');
-//}
-
 
 class HotelApiHandler {
   constructor() {
