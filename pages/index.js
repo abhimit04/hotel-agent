@@ -15,6 +15,7 @@ export default function HotelLanding() {
     setLoading(true);
     setError('');
     setHotels([]);
+    setSummaryLoading(true);
     setSummary("");
 
     try {
@@ -25,17 +26,20 @@ export default function HotelLanding() {
       console.log('API response:', data);
       if (!data.hotels || data.hotels.length === 0) {
         setError('No hotels found');
+        setHotels([]);
+        setSummary(data.summary || "");
       } else {
         setHotels(data.hotels);
         // Trigger AI summary generation
-        setSummaryLoading(true);
+
         setSummary(data.summary || "");
       }
     } catch (err) {
       console.error("Error fetching hotels:", err);
-      setSummary("Failed to generate AI analysis");
+      setError("Failed to fetch hotel and AI analysis");
     } finally {
       setLoading(false);
+      setSummaryLoading(false);
     }
   };
 
@@ -251,7 +255,7 @@ export default function HotelLanding() {
         </div>
 
         {/* AI Summary Section */}
-        {(hotels.length > 0 || summaryLoading) && (
+        {(summaryLoading || summary) && (
           <div className="w-full max-w-7xl mt-16 mb-8">
             <div className="bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 bg-opacity-40 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white border-opacity-20">
               {/* AI Summary Header */}
