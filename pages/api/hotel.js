@@ -46,6 +46,7 @@ async function fetchBookingHotels(city, checkin=null, checkout=null, topN=5) {
     if (!res.ok) return [];
     const json = await res.json();
     const hotels = normalizeBookingResponse(json);
+    console.log(`Fetched ${hotels.length} hotels from Booking.com for city=${city}`);
     return orderBy(hotels, ['review_score','review_count'], ['desc','desc']).slice(0, topN).map(h => ({...h, source: 'booking-com.p.rapidapi.com'}));
   } catch (err) {
     return [];
@@ -86,6 +87,7 @@ export default async function handler(req, res) {
   const checkout = req.query.checkout || null;
 
   const hotels = await fetchBookingHotels(city, checkin, checkout);
+  console.log(`Total hotels fetched before deduplication: ${hotels.length}`);
   if (!hotels.length) return res.status(502).json({ error: 'No data from Booking.com API.' });
 
   const deduped = dedupeHotels(hotels);
