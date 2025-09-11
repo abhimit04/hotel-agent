@@ -54,9 +54,8 @@ export default async function handler(req, res) {
       const summaryResult = await model.generateContent(summaryPrompt);
       const summaryText = summaryResult.response.text().trim();
 
-      return {
-        res.status(200).json({ summary: summaryText });
-      };
+      return res.status(200).json({ summary: summaryText });
+
     } catch (err) {
       console.error("[API LOG] Gemini rerank/summary failed:", err);
       return res.status(500).json({
