@@ -115,19 +115,7 @@ class HotelApiHandler {
           'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
           'X-RapidAPI-Host': 'booking-com.p.rapidapi.com'
         }
-//        params: new URLSearchParams({
-//          dest_type: 'city',
-//          dest_id: await this.getCityId(city, 'booking'),
-//          checkin_date: checkIn,
-//          checkout_date: checkOut,
-//          adults_number: guests.toString(),
-//          order_by: 'popularity',
-//          filter_by_currency: 'USD',
-//          locale: 'en-gb',
-//          room_number: '1',
-//          units: 'metric',
-//          include_adjacency: 'true'
-//        })
+//
       });
 
       if (!response.ok) {
@@ -195,6 +183,7 @@ class HotelApiHandler {
          destUrl.search = new URLSearchParams({
                   query: city,
                   locale: 'en_US'
+                  domain : 'IN'
          }).toString();
 
          const destResponse = await fetch(destUrl, {
@@ -221,7 +210,7 @@ class HotelApiHandler {
 
       const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
             url.search = new URLSearchParams({
-              domain: 'US',
+              domain: 'IN',
               locale: 'en_US',
               destination: destinationId,
               checkin_date: checkIn,
@@ -239,16 +228,7 @@ class HotelApiHandler {
           'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
           'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
         }
-//        params: new URLSearchParams({
-//          domain: 'US',
-//          locale: 'en_US',
-//          destination: city,
-//          checkin_date: checkIn,
-//          checkout_date: checkOut,
-//          adults: guests.toString(),
-//          sort_order: 'REVIEW',
-//          page_number: '1'
-//        })
+//
       });
 
       if (!response.ok) {
@@ -323,14 +303,7 @@ class HotelApiHandler {
           'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || 'your_rapidapi_key_here',
           'X-RapidAPI-Host': 'priceline-com-provider.p.rapidapi.com'
         }
-//        params: new URLSearchParams({
-//          sort_order: 'HDR',
-//          location_id: await this.getCityId(city, 'priceline'),
-//          date_checkout: checkOut,
-//          date_checkin: checkIn,
-//          adults_number: guests.toString(),
-//          rooms_number: '1'
-//        })
+//
       });
 
       if (!response.ok) {
