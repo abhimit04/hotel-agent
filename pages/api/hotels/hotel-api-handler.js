@@ -286,7 +286,7 @@ class HotelApiHandler {
       }
 
       const data = await response.json();
-      return parseExpediaResponse(data);
+      return this.parseExpediaResponse(data);
 
     } catch (error) {
       console.error('Expedia API error:', error);
