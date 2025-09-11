@@ -11,53 +11,33 @@ export default function HotelLanding() {
   const [summary, setSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
 
-  useEffect(() => {
-      const fetchHotels = async () => {
-      e.preventDefault();
+  const fetchHotels = async () => {
+      if (!city.trim()) return;
+
       setLoading(true);
       setError('');
       setHotels([]);
-          //setSummaryLoading(true);
-      setSummary("");
-        try {
-          const res = await fetch(`/api/hotels?city=${encodeURIComponent(city)}&checkin=${checkin}&checkout=${checkout}`);
-          const data = await res.json();
+      setSummary('');
 
-          setHotels(data.hotels);
+      try {
+        const res = await fetch(`/api/hotels?city=${encodeURIComponent(city)}&checkin=${checkin}&checkout=${checkout}`);
+        const data = await res.json();
 
+        // Render hotels instantly
+        setHotels(data.hotels || []);
 
-          // ✅ Trigger AI summary AFTER hotels are set
-          if (data.hotels && data.hotels.length > 0) {
-            generateAiSummary(data.hotels, city);
-          }
-        } catch (err) {
-          console.error("Error fetching hotels:", err);
-        } finally {
-                setLoading(false);
-                //setSummaryLoading(false);
+        // Trigger AI summary in the background
+        if (data.hotels && data.hotels.length > 0) {
+          generateAiSummary(data.hotels, city);
         }
-      };
 
-      fetchHotels();
-    }, [city]);
-
-//  const fetchHotels = async (e) => {
-
-
-//    try {
-//      console.log('Fetching hotels for city:', city);
-
-
-//      const data = await res.json();
-//      console.log('API response:', data);
-
-        //setSummary(data.summary || "");
-
-        // Trigger AI summary generation
-
-       // setSummary(data.summary || "");
-
-
+      } catch (err) {
+        console.error("Error fetching hotels:", err);
+        setError("Unable to fetch hotels. Try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
 
   const generateAiSummary = async (hotelData, searchCity) => {
