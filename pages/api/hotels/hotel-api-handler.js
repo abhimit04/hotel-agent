@@ -182,7 +182,8 @@ class HotelApiHandler {
 
 
   // Expedia API integration
-  async function fetchExpediaData({ city, checkIn, checkOut, guests }) {
+  async fetchExpediaData(searchParams) {
+  const { city, checkIn, checkOut, guests } = searchParams;
     try {
       // Return cached result if available
 
