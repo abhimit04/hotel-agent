@@ -236,7 +236,7 @@ class HotelApiHandler {
 
         // Cache the result
        // destinationCache.set(city, cityResult);
-      }
+
 
       // Step 2: Use the destination ID in the hotel search
       const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
