@@ -236,17 +236,7 @@ class HotelApiHandler {
                        console.error("Expedia API error:", err);
                        throw err;
                      }
-                   }
-//          if (!destData?.data?.length) {
-//            return res.status(404).json({ error: `No Expedia region found for ${city}` });
-//          }
 
-           // Find the destination ID. This is a common pattern for these APIs.
-//          const destinationId = destData?.suggestions[0]?.entities?.[0]?.destinationId;
-//
-//          if (!destinationId) {
-//                          throw new Error('Could not find a valid destination ID for the city.');
-//          }
 
           // Step 2: Use the destination ID in the hotel search
 
