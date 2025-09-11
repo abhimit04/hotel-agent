@@ -211,11 +211,11 @@ class HotelApiHandler {
 
 
   // Expedia API integration
-  async fetchExpediaData(searchParams) {
-  const { city, checkIn, checkOut, guests } = searchParams;
-    try {
-      // Return cached result if available
+  // Expedia API integration
+    async fetchExpediaData(searchParams) {
+      const { city, checkIn, checkOut, guests } = searchParams;
 
+      try {
         // Step 1: Search for destination ID
         const destUrl = new URL('https://hotels-com-provider.p.rapidapi.com/v2/regions');
         destUrl.search = new URLSearchParams({
@@ -233,76 +233,76 @@ class HotelApiHandler {
         });
 
         console.log('Expedia destination response status:', destResponse.status);
-        // ✅ Handle 429 for destination search gracefully
+
+        // Handle 429 for destination search gracefully
         if (destResponse.status === 429) {
-              console.warn('Expedia Destination API rate limit hit');
-              return this.generateMockExpediaData(searchParams);
+          console.warn('Expedia Destination API rate limit hit');
+          return { hotels: [], platform: 'expedia' };
         }
+
         if (!destResponse.ok) {
-          throw new Error(`Expedia Destination API error: ${destResponse.status}`);
+          console.warn(`Expedia Destination API error: ${destResponse.status}`);
+          return { hotels: [], platform: 'expedia' };
         }
 
         const destData = await destResponse.json();
         const suggestions = destData?.data || [];
 
         if (!Array.isArray(suggestions) || suggestions.length === 0) {
-          throw new Error(`No suggestions found for city: ${city}`);
+          console.warn(`No suggestions found for city: ${city}`);
+          return { hotels: [], platform: 'expedia' };
         }
 
-        // **FIX START**
-        // Declare cityResult with `const` or `let`
+        // Find a valid city result
         const cityResult = suggestions.find(r => r.type === 'CITY') || suggestions.find(r => r.type === 'AIRPORT');
-        // **FIX END**
 
         if (!cityResult) {
-          throw new Error(`No valid suggestions found for city: ${city}`);
+          console.warn(`No valid suggestions found for city: ${city}`);
+          return { hotels: [], platform: 'expedia' };
         }
 
-        // Cache the result
-        // destinationCache.set(city, cityResult);
+        // Step 2: Use the destination ID in the hotel search
+        const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
+        url.search = new URLSearchParams({
+          domain: 'IN',
+          locale: 'en_IN',
+          region_id: cityResult.gaiaId,
+          checkin_date: checkIn,
+          checkout_date: checkOut,
+          adults_number: guests,
+          children_number: 0,
+          rooms_number: 1,
+          sort_order: 'REVIEW',
+          currency: 'INR',
+          page_number: 1
+        }).toString();
 
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+            'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
+          }
+        });
 
-      // Step 2: Use the destination ID in the hotel search
-      const url = new URL('https://hotels-com-provider.p.rapidapi.com/v2/hotels/search');
-      url.search = new URLSearchParams({
-        domain: 'IN',
-        locale: 'en_IN',
-        region_id: cityResult.gaiaId,      // note: region_id for search
-        checkin_date: checkIn,
-        checkout_date: checkOut,
-        adults_number: guests,
-        children_number: 0,
-        rooms_number: 1,
-        sort_order: 'REVIEW',
-        currency: 'INR',
-        page_number: 1
-      }).toString();
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-          'X-RapidAPI-Host': 'hotels-com-provider.p.rapidapi.com'
+        if (!response.ok) {
+          if (response.status === 429) {
+            console.warn('Expedia API rate limit reached');
+            return { hotels: [], platform: 'expedia' };
+          }
+          console.warn(`Expedia Hotels API error: ${response.status}`);
+          return { hotels: [], platform: 'expedia' };
         }
-      });
 
-      if (!response.ok) {
-              if (response.status === 429) {
-                console.warn('Expedia API rate limit reached');
-                return { hotels: [], platform: 'expedia' };
-              }
-              throw new Error(`Expedia Hotels API error: ${response.status}`);
+        const data = await response.json();
+        return this.parseExpediaResponse(data);
+
+      } catch (error) {
+        console.error('Expedia API error:', error.message);
+        // Always return a safe fallback instead of throwing
+        return { hotels: [], platform: 'expedia' };
       }
-
-      const data = await response.json();
-      return this.parseExpediaResponse(data);
-
-    } catch (error) {
-      console.error('Expedia API error:', error);
-      // Fallback: return mock or cached data
-      return this.generateMockExpediaData(searchParams);
     }
-  }
   // Hotels.com direct API
 //  async fetchHotelsData(searchParams) {
 //    const { city, checkIn, checkOut, guests } = searchParams;
