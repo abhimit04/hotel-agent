@@ -26,7 +26,7 @@ class HotelApiHandler {
 
   // Main search function that coordinates all platform searches
   async searchHotels(searchParams) {
-    const { city, checkIn, checkOut, guests, platforms = ['booking', 'agoda', 'expedia'] } = searchParams;
+    const { city, checkIn, checkOut, guests, platforms = ['booking', 'agoda'] } = searchParams;
 
     console.log(`Searching hotels in ${city} for ${guests} guests from ${checkIn} to ${checkOut}`);
 
