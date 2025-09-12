@@ -1,5 +1,6 @@
 //import { useState } from 'react';
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 export default function HotelLanding() {
   const [city, setCity] = useState('');
@@ -339,9 +340,9 @@ export default function HotelLanding() {
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <p className="text-white leading-relaxed text-lg font-light">
-                            {summary}
-                          </p>
+                           <div className="text-white leading-relaxed text-lg font-light prose prose-invert max-w-none">
+                           <ReactMarkdown>{summary}</ReactMarkdown>
+                           </div>
                         </div>
                       </div>
                     </div>
