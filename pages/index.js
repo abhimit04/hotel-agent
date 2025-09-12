@@ -289,7 +289,7 @@ export default function HotelLanding() {
                   </div>
                 </div>
               )}
-            </div>
+
 
         {/* AI Summary Section */}
         {(summaryLoading || summary) && (
