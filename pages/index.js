@@ -278,12 +278,18 @@ export default function HotelLanding() {
                     {/* Hyperlink to source */}
                     {selectedHotel.source_url && (
                       <a
-                        href={selectedHotel.source_url}
+                        href={
+                          selectedHotel.source_url
+                            ? selectedHotel.source_url
+                            : `https://www.google.com/search?q=${encodeURIComponent(
+                                `${selectedHotel.name} ${city}`
+                              )}`
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-block w-full text-center bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-lg"
                       >
-                        View on {selectedHotel.source_name || "Website"}
+                        View on {selectedHotel.source_name || "Google"}
                       </a>
                     )}
                   </div>
