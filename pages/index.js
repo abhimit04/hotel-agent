@@ -26,7 +26,7 @@ export default function HotelLanding() {
         // Render hotels instantly
         setHotels(data.hotels || []);
 
-        if(!data.hotels || data.hotels.length === 0) {
+        if (data.hotels && data.hotels.length > 0) {
         generateAiSummary(data.hotels, city);
         // Trigger AI summary in the backgroun
       }
