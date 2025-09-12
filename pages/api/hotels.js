@@ -81,6 +81,15 @@ export default async function handler(req, res) {
 
         const sortedHotels = orderBy(hotels, ["review_score", "review_count"], ["desc", "desc"]);
 
+         // --- Step 3: Save to cache (memory + supabase) ---
+         memoryCache.set(cacheKey, { data: sortedHotels, timestamp: now });
+
+         await supabase.from("hotel_cache").insert({
+                  city: cacheKey,
+                  data: sortedHotels,
+                  created_at: new Date().toISOString(),
+                });
+
         //Send to Gemini for rerank ---
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -113,24 +122,8 @@ export default async function handler(req, res) {
               console.warn("[API LOG] Gemini rerank failed, using numeric fallback");
             }
 
-            return res.status(200).json({ hotels: topHotels });
+            return res.status(200).json({ hotels: topHotels })
 
-          } catch (error) {
-            console.error("[API LOG] Unexpected error:", error);
-            return res.status(200).json({ hotels: getDummyHotels(city) });
-          }
-        }
-
-        // --- Step 3: Save to cache (memory + supabase) ---
-        memoryCache.set(cacheKey, { data: sortedHotels, timestamp: now });
-
-        await supabase.from("hotel_cache").insert({
-          city: cacheKey,
-          data: sortedHotels,
-          created_at: new Date().toISOString(),
-        });
-
-        return res.status(200).json({ hotels: sortedHotels });
 
       } catch (error) {
         console.error("[API LOG] Unexpected error:", error);
