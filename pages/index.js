@@ -208,7 +208,7 @@ export default function HotelLanding() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                  <span className="text-emerald-300 text-sm font-medium">Available</span>
+                  <span className="text-emerald-300 text-sm font-medium">{selectedHotel.available ? "✅ Available" : "❌ Sold Out"}</span>
                 </div>
                 <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-xs font-bold">
                   TOP RATED

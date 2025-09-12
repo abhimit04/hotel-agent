@@ -180,6 +180,7 @@ async function fetchBookingHotels(lat, lon) {
       review_count: Number(h.review_count) || 0,
       review_text: h.review_score_word || "",
       image_url: h.max_1440_photo || h.main_photo_url || null,
+      available: h.soldout === false || h.soldout === undefined,
     }));
   } catch (err) {
     console.error("[API LOG] Booking.com fetch error:", err);
@@ -215,6 +216,7 @@ async function fetchTripAdvisorHotels(city) {
       review_count: Number(h.num_reviews) || 0,
       review_text: "",
       image_url: h.photo?.images?.large?.url || null,
+      available: true,
     }));
   } catch (err) {
     console.error("[API LOG] TripAdvisor fetch error:", err);
@@ -253,6 +255,7 @@ async function fetchTravelAdvisorHotels(city) {
         review_count: Number(h.result_object.num_reviews) || 0,
         review_text: "",
         image_url: h.result_object.photo?.images?.large?.url || null,
+        available: true,
       }));
   } catch (err) {
     console.error("[API LOG] TravelAdvisor fetch error:", err);
