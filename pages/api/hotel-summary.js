@@ -49,7 +49,7 @@ export default async function handler(req, res) {
 //    }
 
     // --- Step 2: Generate summary separately ---
-    let topHotels = hotels.slice(0, 10); // fallback
+//    let topHotels = hotels.slice(0, 10); // fallback
     const summaryPrompt = `You are a travel assistant.
 Write a well-formatted summary for the top hotels in "${city}". Focus on cleanliness, location, price, and overall guest experience.
 Provide a structured analysis in Markdown format with these sections:
@@ -58,7 +58,7 @@ Provide a structured analysis in Markdown format with these sections:
  -Hotel Name — short description, key highlight, and rating (if available).
 - End with a short closing remark (1 line) encouraging booking.
 
-Hotels: ${JSON.stringify(topHotels)}
+Hotels: ${JSON.stringify(hotels)}
 
 Return ONLY the Markdown summary (no JSON, no explanations).`;
 
