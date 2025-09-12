@@ -281,9 +281,7 @@ export default function HotelLanding() {
                         href={
                           selectedHotel.source_url
                             ? selectedHotel.source_url
-                            : `https://www.google.com/search?q=${encodeURIComponent(
-                                `${selectedHotel.name} ${city}`
-                              )}`
+                            : `https://www.google.com/search?q=${encodeURIComponent(`${selectedHotel.name} ${city}`)}`
                         }
                         target="_blank"
                         rel="noopener noreferrer"
@@ -291,7 +289,7 @@ export default function HotelLanding() {
                       >
                         View on {selectedHotel.source_name || "Google"}
                       </a>
-                    )}
+
                   </div>
                 </div>
               )}
