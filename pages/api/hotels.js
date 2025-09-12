@@ -122,6 +122,7 @@ export default async function handler(req, res) {
               console.warn("[API LOG] Gemini rerank failed, using numeric fallback");
             }
 
+            topHotels = await enrichAvailability(topHotels);
             return res.status(200).json({ hotels: topHotels })
 
 
@@ -130,6 +131,37 @@ export default async function handler(req, res) {
         return res.status(200).json({ hotels: getDummyHotels(city) });
       }
     }
+
+
+/** Availability Check - Safe */
+async function enrichAvailability(hotels) {
+  if (!Array.isArray(hotels)) return [];
+  return Promise.all(
+    hotels.map(async (hotel) => {
+      try {
+        // Only check Booking.com availability if hotel.id exists
+        if (hotel.id && hotel.name) {
+          const url = `https://booking-com.p.rapidapi.com/v1/hotels/availability?hotel_id=${hotel.id}&checkin_date=2025-09-20&checkout_date=2025-09-21&adults_number=2&currency=INR&locale=en-gb`;
+          const response = await fetch(url, {
+            headers: {
+              "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+              "X-RapidAPI-Host": "booking-com.p.rapidapi.com",
+            },
+          });
+
+          if (!response.ok) return { ...hotel, available: true }; // fallback
+          const data = await response.json();
+
+          return { ...hotel, available: Array.isArray(data.rooms) ? data.rooms.length > 0 : true };
+        }
+        return { ...hotel, available: true };
+      } catch (err) {
+        console.error(`[API LOG] Availability check failed for ${hotel.name}:`, err);
+        return { ...hotel, available: true };
+      }
+    })
+  );
+}
 
 /** Safe geocoding fetch with error handling */
 async function safeFetchGeo(city) {
