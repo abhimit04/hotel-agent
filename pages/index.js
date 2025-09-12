@@ -14,7 +14,18 @@ export default function HotelLanding() {
   const [selectedHotel, setSelectedHotel] = useState(null); // <-- NEW: Track selected hotel
 
   const fetchHotels = async () => {
-      if (!city.trim()) return;
+       if (!city.trim()) {
+            setError("Please enter a city.");
+         return;
+          }
+         if (!checkin || !checkout) {
+           setError("Please select both check-in and check-out dates.");
+           return;
+         }
+         if (new Date(checkout) <= new Date(checkin)) {
+           setError("Check-out date must be after check-in date.");
+           return;
+         }
 
       setLoading(true);
       setError('');
@@ -22,7 +33,7 @@ export default function HotelLanding() {
       setSummary('');
 
       try {
-        const res = await fetch(`/api/hotels?city=${encodeURIComponent(city)}&checkin=${checkin}&checkout=${checkout}`);
+        const res = await fetch(`/api/hotels?city=${encodeURIComponent(city)}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`);
         const data = await res.json();
 
         // Render hotels instantly
