@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 //    const rerankResult = await model.generateContent(rerankPrompt);
 //    const rerankText = rerankResult.response.text().trim();
 //
-//    let topHotels = hotels.slice(0, 10); // fallback
+//
 //    try {
 //      // Extract JSON using regex in case Gemini wraps it with text or code blocks
 //      const jsonMatch = rerankText.match(/\{[\s\S]*\}/);
@@ -49,6 +49,7 @@ export default async function handler(req, res) {
 //    }
 
     // --- Step 2: Generate summary separately ---
+    let topHotels = hotels.slice(0, 10); // fallback
     const summaryPrompt = `You are a travel assistant.
 Write a well-formatted summary for the top hotels in "${city}". Focus on cleanliness, location, price, and overall guest experience.
 Provide a structured analysis in Markdown format with these sections:
