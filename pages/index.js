@@ -25,9 +25,11 @@ export default function HotelLanding() {
 
         // Render hotels instantly
         setHotels(data.hotels || []);
+
+        if(!data.hotels || data.hotels.length === 0) {
         generateAiSummary(data.hotels, city);
         // Trigger AI summary in the backgroun
-
+      }
       } catch (err) {
         console.error("Error fetching hotels:", err);
         setError("Unable to fetch hotels. Try again.");
