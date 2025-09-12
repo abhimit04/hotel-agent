@@ -30,12 +30,22 @@ Hotels: ${JSON.stringify(hotels)}
 `;
 
     const rerankResult = await model.generateContent(rerankPrompt);
+    const rerankText = rerankResult.response.text().trim();
+
     let topHotels = hotels.slice(0, 10); // fallback
     try {
-      const parsed = JSON.parse(rerankResult.response.text());
-      topHotels = parsed.hotels || topHotels;
+      // Extract JSON using regex in case Gemini wraps it with text or code blocks
+      const jsonMatch = rerankText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.hotels && Array.isArray(parsed.hotels)) {
+          topHotels = parsed.hotels;
+        }
+      } else {
+        console.warn("[API LOG] No JSON found in Gemini response, using fallback");
+      }
     } catch (err) {
-      console.error("[API LOG] Rerank response parse failed, using numeric sort fallback");
+      console.error("[API LOG] Failed to parse Gemini response JSON:", rerankText);
     }
 
     // --- Step 2: Generate summary separately ---
