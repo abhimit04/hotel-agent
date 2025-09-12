@@ -89,12 +89,6 @@ export default async function handler(req, res) {
          // --- Step 3: Save to cache (memory + supabase) ---
          memoryCache.set(cacheKey, { data: sortedHotels, timestamp: now });
 
-         await supabase.from("hotel_cache").insert({
-                  city: cacheKey,
-                  data: sortedHotels,
-                  created_at: new Date().toISOString(),
-                });
-
         //Send to Gemini for rerank ---
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -126,6 +120,12 @@ export default async function handler(req, res) {
             } catch (err) {
               console.warn("[API LOG] Gemini rerank failed, using numeric fallback");
             }
+
+            await supabase.from("hotel_cache").insert({
+                              city: cacheKey,
+                              data: topHotels,
+                              created_at: new Date().toISOString(),
+             });
 
             //topHotels = await enrichAvailability(topHotels);
             return res.status(200).json({ hotels: topHotels })
