@@ -276,7 +276,7 @@ export default function HotelLanding() {
                     </p>
 
                     {/* Hyperlink to source */}
-                    {selectedHotel.source_url && (
+
                       <a
                         href={
                           selectedHotel.source_url
