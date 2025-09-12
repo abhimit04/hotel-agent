@@ -66,6 +66,7 @@ export default async function handler(req, res) {
       fetchTravelAdvisorHotels(city),
     ]);
 
+
     const hotels = [
       ...(bookingHotels.status === "fulfilled" ? bookingHotels.value : []),
       ...(tripAdvisorHotels.status === "fulfilled" ? tripAdvisorHotels.value : []),
@@ -79,6 +80,46 @@ export default async function handler(req, res) {
         }
 
         const sortedHotels = orderBy(hotels, ["review_score", "review_count"], ["desc", "desc"]);
+
+        //Send to Gemini for rerank ---
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+            const rerankPrompt = `You are a travel assistant. Rank these hotels in "${city}" by:
+            - Review score (highest first)
+            - Review count (higher is better)
+            - Positive review text (prefer 'Excellent' over 'Good')
+
+            Return strictly as JSON:
+            {
+              "hotels": [ ...top 10 hotels exactly as provided, no extra commentary... ]
+            }
+
+            Hotels: ${JSON.stringify(sortedHotels.slice(0, 25))}`;
+
+            let topHotels = sortedHotels.slice(0, 10);
+            try {
+              const rerankResult = await model.generateContent(rerankPrompt);
+              const rerankText = rerankResult.response.text().trim();
+              const jsonMatch = rerankText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                if (parsed.hotels && Array.isArray(parsed.hotels)) {
+                  topHotels = parsed.hotels;
+                }
+              }
+            } catch (err) {
+              console.warn("[API LOG] Gemini rerank failed, using numeric fallback");
+            }
+
+            return res.status(200).json({ hotels: topHotels });
+
+          } catch (error) {
+            console.error("[API LOG] Unexpected error:", error);
+            return res.status(200).json({ hotels: getDummyHotels(city) });
+          }
+        }
 
         // --- Step 3: Save to cache (memory + supabase) ---
         memoryCache.set(cacheKey, { data: sortedHotels, timestamp: now });
