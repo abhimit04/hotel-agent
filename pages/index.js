@@ -245,7 +245,7 @@ export default function HotelLanding() {
               <div className="mt-6 pt-4 border-t border-white border-opacity-20">
                 <button
                 onClick={() => setSelectedHotel(h)}
-                className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-cyan-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-cyan-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
                   View Details
                 </button>
