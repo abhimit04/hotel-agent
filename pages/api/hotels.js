@@ -11,19 +11,24 @@ const memoryCache = new Map();
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 export default async function handler(req, res) {
-  const { city } = req.query;
+  const { city, checkin_date, checkout_date } = req.query;
 
-  if (!city) {
-    return res.status(400).json({ error: "City parameter is required" });
-  }
+    // ✅ Mandatory field validation
+    if (!city || !checkin_date || !checkout_date) {
+      return res.status(400).json({ error: "City, check-in, and check-out dates are required" });
+    }
 
-  console.log(`[API LOG] Fetching hotels for city: ${city}`);
+    if (new Date(checkout_date) <= new Date(checkin_date)) {
+      return res.status(400).json({ error: "Check-out date must be after check-in date" });
+    }
+
+  console.log(`[API LOG] Fetching hotels for city: ${city} between ${checkin_date} - ${checkout_date}`);
+
 
   try {
     // --- Step 0: Check memory cache first ---
-    const cacheKey = city.toLowerCase();
+    const cacheKey = `${city.toLowerCase()}_${checkin_date}_${checkout_date}`;
     const now = Date.now();
-
     if (memoryCache.has(cacheKey)) {
       const cached = memoryCache.get(cacheKey);
       if (now - cached.timestamp < CACHE_TTL) {
