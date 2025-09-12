@@ -10,6 +10,7 @@ export default function HotelLanding() {
   const [error, setError] = useState('');
   const [summary, setSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [selectedHotel, setSelectedHotel] = useState(null); // <-- NEW: Track selected hotel
 
   const fetchHotels = async () => {
       if (!city.trim()) return;
@@ -242,13 +243,53 @@ export default function HotelLanding() {
               </div>
 
               <div className="mt-6 pt-4 border-t border-white border-opacity-20">
-                <button className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-cyan-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                <button
+                onClick={() => setSelectedHotel(h)}
+                className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-cyan-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                  >
                   View Details
                 </button>
               </div>
             </div>
           ))}
         </div>
+
+         {/* Modal for Hotel Details */}
+              {selectedHotel && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                  <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full relative">
+                    {/* Close Button */}
+                    <button
+                      className="absolute top-3 right-3 text-gray-600 hover:text-black"
+                      onClick={() => setSelectedHotel(null)}
+                    >
+                      ✕
+                    </button>
+
+                    <h2 className="text-2xl font-bold text-gray-800 mb-3">{selectedHotel.name}</h2>
+                    <p className="text-gray-700 mb-2">{selectedHotel.address}</p>
+                    <p className="text-gray-600 mb-4">
+                      Review Score: <strong>{selectedHotel.review_score}</strong> ({selectedHotel.review_count} reviews)
+                    </p>
+                    <p className="text-gray-600 mb-6">
+                      Agent Score: <strong>{selectedHotel.agent_score}</strong>
+                    </p>
+
+                    {/* Hyperlink to source */}
+                    {selectedHotel.source_url && (
+                      <a
+                        href={selectedHotel.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block w-full text-center bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-lg"
+                      >
+                        View on {selectedHotel.source_name || "Website"}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
         {/* AI Summary Section */}
         {(summaryLoading || summary) && (
