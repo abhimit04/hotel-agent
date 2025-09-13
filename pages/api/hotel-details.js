@@ -6,18 +6,104 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { getDummyHotelDetails } = require('./dummyData');
 
-// --- Assuming these are your API client functions ---
-// In a real app, these would make network calls to external APIs
+// --- Step 1: Simulate third-party API clients ---
+// In a real application, these functions would make network requests to external APIs.
+// For this example, we return a mock hotel object.
+
+const bookingHotels = async (hotelName, city, checkin, checkout) => {
+    console.log(`Searching Booking.com for "${hotelName}"`);
+    return new Promise(resolve => {
+        setTimeout(() => {
+            const data = getDummyHotelDetails(hotelName);
+            if (data) {
+                resolve({
+                    ...data,
+                    source: 'Booking.com',
+                    url: `https://www.booking.com/search?q=${encodeURIComponent(hotelName)}`,
+                });
+            } else {
+                resolve(null);
+            }
+        }, 500); // Simulate network delay
+    });
+};
+
+const tripAdvisorHotels = async (hotelName, city, checkin, checkout) => {
+    console.log(`Searching TripAdvisor for "${hotelName}"`);
+    return new Promise(resolve => {
+        setTimeout(() => {
+            const data = getDummyHotelDetails(hotelName);
+            if (data) {
+                resolve({
+                    ...data,
+                    source: 'TripAdvisor',
+                    url: `https://www.tripadvisor.com/search?q=${encodeURIComponent(hotelName)}`,
+                });
+            } else {
+                resolve(null);
+            }
+        }, 700);
+    });
+};
+
+const travelAdvisorHotels = async (hotelName, city, checkin, checkout) => {
+    console.log(`Searching TravelAdvisor for "${hotelName}"`);
+    return new Promise(resolve => {
+        setTimeout(() => {
+            const data = getDummyHotelDetails(hotelName);
+            if (data) {
+                resolve({
+                    ...data,
+                    source: 'TravelAdvisor',
+                    url: `https://www.traveladvisor.com/search?q=${encodeURIComponent(hotelName)}`,
+                });
+            } else {
+                resolve(null);
+            }
+        }, 600);
+    });
+};
+
+// --- Step 2: Search and aggregate data from multiple APIs ---
 const fetchHotelByNameFromApi = async (hotelName, city, checkin, checkout) => {
-    // --- Step 1: Search for the specific hotel using multiple APIs ---
-    // In a real application, you would query multiple hotel APIs here.
-    // For this example, we will simulate a successful lookup.
-    // Real-world logic would include fuzzy matching, data aggregation, etc.
+    // Run all API calls in parallel to speed up the process.
+    const results = await Promise.allSettled([
+        bookingHotels(hotelName, city, checkin, checkout),
+        tripAdvisorHotels(hotelName, city, checkin, checkout),
+        travelAdvisorHotels(hotelName, city, checkin, checkout),
+    ]);
 
-    console.log(`Searching for hotel "${hotelName}" in ${city} for dates ${checkin} to ${checkout}`);
-    const foundHotel = getDummyHotelDetails(hotelName);
+    let mergedHotel = null;
 
-    return foundHotel;
+    // Aggregate data from successful API calls
+    results.forEach(result => {
+        if (result.status === 'fulfilled' && result.value) {
+            const hotelData = result.value;
+            if (!mergedHotel) {
+                mergedHotel = {
+                    ...hotelData,
+                    sources: [{ name: hotelData.source, url: hotelData.url }]
+                };
+            } else {
+                // Merge data from other sources.
+                // This is a simple merge; a real-world app would have more complex logic
+                // to handle conflicting data (e.g., different review scores).
+                mergedHotel.sources.push({ name: hotelData.source, url: hotelData.url });
+                if (hotelData.review_score && hotelData.review_count) {
+                    const totalReviews = mergedHotel.review_count + hotelData.review_count;
+                    if (totalReviews > 0) {
+                        mergedHotel.review_score = (
+                            (mergedHotel.review_score * mergedHotel.review_count) +
+                            (hotelData.review_score * hotelData.review_count)
+                        ) / totalReviews;
+                        mergedHotel.review_count = totalReviews;
+                    }
+                }
+            }
+        }
+    });
+
+    return mergedHotel;
 };
 
 // --- API Endpoint Handler ---
@@ -29,27 +115,29 @@ async function handleHotelDetails(req, res) {
     }
 
     try {
-        // Fetch data for the specific hotel
+        // Fetch data for the specific hotel from multiple sources
         const hotel = await fetchHotelByNameFromApi(hotel_name, city, checkin_date, checkout_date);
 
         if (!hotel) {
             return res.status(200).json({ error: { message: `No hotel found with the name "${hotel_name}".` } });
         }
 
-        // --- Step 2: Use Gemini to generate a summary for the single hotel ---
+        // --- Step 3: Use Gemini to generate a summary for the single hotel ---
         let summary = '';
         try {
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+            // Create a detailed prompt with the collated data
             const summaryPrompt = `You are a hotel review assistant. Based on the following hotel details and reviews, provide a concise and engaging summary for a traveler. Highlight key features, amenities, and overall vibe.
 
             Hotel Details:
             - Name: ${hotel.name}
             - Address: ${hotel.address}
-            - Review Score: ${hotel.review_score} (${hotel.review_count} reviews)
-            - Description: ${hotel.description}
-            - Amenities: ${hotel.amenities.join(', ')}
+            - Review Score: ${hotel.review_score ? hotel.review_score.toFixed(1) : 'N/A'} (${hotel.review_count} reviews)
+            - Description: ${hotel.description || 'No description available.'}
+            - Amenities: ${hotel.amenities.join(', ') || 'No amenities listed.'}
+            - Sources: ${hotel.sources.map(s => s.name).join(', ')}
 
             Return the summary as a single paragraph. Do not use a header or title.`;
 
@@ -60,7 +148,7 @@ async function handleHotelDetails(req, res) {
             summary = "AI analysis is currently unavailable. Please check the hotel details below.";
         }
 
-        // --- Step 3: Return the hotel details and summary ---
+        // --- Step 4: Return the hotel details and summary ---
         return res.status(200).json({
             hotel: hotel,
             summary: summary,
