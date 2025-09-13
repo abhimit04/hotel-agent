@@ -59,7 +59,7 @@ export default async function handler(req, res) {
     const geoData = await safeFetchGeo(city);
     if (!geoData || !geoData.length) {
       console.warn(`[API LOG] No geocoding result for city: ${city}`);
-      return res.status(200).json({
+      return res.status(400).json({
       error: {
             code: "CITY_NOT_FOUND",
             message: "Sorry!! this finder is not configured for region-specific search. Please try specifying a city like Delhi or Mumbai."
@@ -173,9 +173,10 @@ export default async function handler(req, res) {
 //}
 
 /** Safe geocoding fetch with error handling */
-async function safeFetchGeo(city) {
+async function safeFetchGeo(cityOrQuery) {
   try {
-    const geoUrl = `https://forward-reverse-geocoding.p.rapidapi.com/v1/forward?city=${encodeURIComponent(city)}&format=json&limit=1`;
+    const geoUrl = `https://forward-reverse-geocoding.p.rapidapi.com/v1/forward?city=${encodeURIComponent(cityOrQuery)}&format=json&limit=1`;
+
     const geoResponse = await fetch(geoUrl, {
       headers: {
         "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
@@ -183,15 +184,20 @@ async function safeFetchGeo(city) {
       },
     });
     if (!geoResponse.ok) {
-      console.error(`[API LOG] Geocoding failed with status: ${geoResponse.status}`);
-      return null;
+          console.error(`[API LOG] Geocoding failed with status: ${geoResponse.status}`);
+          return { success: false, message: "Failed to fetch geolocation" };
     }
-    return await geoResponse.json();
-  } catch (err) {
-    console.error(`[API LOG] Geocoding request error:`, err);
-    return null;
-  }
-}
+    const data = await geoResponse.json();
+        if (!data || data.length === 0) {
+          return { success: false, message: "Location not found" };
+        }
+
+        return  { success: true, data }; // ✅ Now always returns consistent object
+      } catch (err) {
+        console.error(`[API LOG] Geocoding request error:`, err);
+        return { success: false, message: "Error during geolocation lookup" };
+      }
+    }
 
 async function fetchBookingHotels(lat, lon) {
   try {
