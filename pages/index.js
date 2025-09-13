@@ -6,6 +6,7 @@ export default function HotelLanding() {
   const [city, setCity] = useState('');
   const [checkin, setCheckin] = useState('');
   const [checkout, setCheckout] = useState('');
+  const [geoData, setGeoData] = useState('');
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,6 +27,11 @@ export default function HotelLanding() {
            setError("Check-out date must be after check-in date.");
            return;
          }
+
+         if (!geoData || !geoData.length) {
+               setError("Sorry!! this finder is not configured for region-specific search. /nPlease try specific city/region name like Delhi,Goregaon.");
+               return;
+          }
 
       setLoading(true);
       setError('');
