@@ -59,7 +59,7 @@ export default async function handler(req, res) {
     const geoData = await safeFetchGeo(city);
     if (!geoData || !geoData.length) {
       console.warn(`[API LOG] No geocoding result for city: ${city}`);
-      return res.status(200).json({ hotels: getDummyHotels(city) });
+      return res.status(200).json({ error: "Sorry!! this is yet not configured for region specific search. \nPlease try a specify city name for optimum results i.e Delhi, Mumbai" });
     }
 
     const { lat, lon } = geoData[0];
@@ -81,7 +81,7 @@ export default async function handler(req, res) {
     console.log(`[API LOG] Total hotels collected: ${hotels.length}`);
 
     if (hotels.length === 0) {
-          return res.status(200).json({ error: "Sorry!! this is yet not configured for region specific search. \nPlease try a specify city name for optimum results i.e Delhi, Mumbai" });
+          return res.status(200).json({hotels: getDummyHotels(city)});
         }
 
         const sortedHotels = orderBy(hotels, ["review_score", "review_count"], ["desc", "desc"]);
