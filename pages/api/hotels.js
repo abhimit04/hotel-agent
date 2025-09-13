@@ -59,7 +59,7 @@ export default async function handler(req, res) {
     const geoData = await safeFetchGeo(city);
     if (!geoData || !geoData.length) {
       console.warn(`[API LOG] No geocoding result for city: ${city}`);
-      return res.status(400).json({
+      return res.status(200).json({
       error: {
             code: "CITY_NOT_FOUND",
             message: "Sorry!! this finder is not configured for region-specific search. Please try specifying a city like Delhi or Mumbai."
