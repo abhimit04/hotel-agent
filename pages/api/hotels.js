@@ -175,66 +175,71 @@ export default async function handler(req, res) {
 /** Safe geocoding fetch with error handling */
 async function safeFetchGeo(cityOrQuery) {
   try {
-
     if (!cityOrQuery || !cityOrQuery.trim()) {
-          return { success: false, message: "City name is required." };
+      return { success: false, message: "City name is required." };
     }
+
     console.log(`[API LOG] Fetching geo data for: ${cityOrQuery}`);
 
-    const geoUrl = `https://forward-reverse-geocoding.p.rapidapi.com/v1/forward?city=${encodeURIComponent(cityOrQuery)}&format=json&limit=1`;
+    async function fetchGeo(query) {
+      const geoUrl = `https://forward-reverse-geocoding.p.rapidapi.com/v1/forward?city=${encodeURIComponent(query)}&format=json&limit=1`;
 
-    const geoResponse = await fetch(geoUrl, {
-      headers: {
-        "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "forward-reverse-geocoding.p.rapidapi.com",
-      },
-    });
-    if (!geoResponse.ok) {
-          console.error(`[API LOG] Geocoding failed with status: ${geoResponse.status}`);
-          return null;
+      const geoResponse = await fetch(geoUrl, {
+        headers: {
+          "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+          "X-RapidAPI-Host": "forward-reverse-geocoding.p.rapidapi.com",
+        },
+      });
+
+      if (!geoResponse.ok) {
+        console.error(`[API LOG] Geocoding failed with status: ${geoResponse.status}`);
+        return null;
+      }
+
+      const data = await geoResponse.json();
+      return data?.length > 0 ? data : null;
     }
-    const data = await geoResponse.json();
-    return data?.length > 0 ? data : null;
-     };
 
-      let geoData = await fetchGeo(cityOrQuery);
+    // First try with original query
+    let geoData = await fetchGeo(cityOrQuery);
 
-          // If no results, attempt fallback by removing common locality words
-          if (!geoData) {
-            const cleanedQuery = cityOrQuery
-              .replace(/\b(North|South|East|West|Aerocity|City|Town|Area)\b/gi, "")
-              .trim();
+    // If no results, attempt fallback by removing common locality words
+    if (!geoData) {
+      const cleanedQuery = cityOrQuery
+        .replace(/\b(North|South|East|West|Aerocity|City|Town|Area)\b/gi, "")
+        .trim();
 
-            if (cleanedQuery && cleanedQuery.toLowerCase() !== cityOrQuery.toLowerCase()) {
-              console.warn(`[API LOG] No results for '${cityOrQuery}', retrying with '${cleanedQuery}'`);
-              geoData = await fetchGeo(cleanedQuery);
-              if (geoData) {
-                return {
-                  success: true,
-                  data: geoData,
-                  message: `No exact match for "${cityOrQuery}". Showing results for "${cleanedQuery}" instead.`,
-                };
-              }
-            }
-          }
+      if (cleanedQuery && cleanedQuery.toLowerCase() !== cityOrQuery.toLowerCase()) {
+        console.warn(`[API LOG] No results for '${cityOrQuery}', retrying with '${cleanedQuery}'`);
+        geoData = await fetchGeo(cleanedQuery);
 
-          // Final check — still no results
-          if (!geoData) {
-            console.warn(`[API LOG] No geocoding result for city: ${cityOrQuery}`);
-            return {
-              success: false,
-              message: `Sorry!! we couldn't find "${cityOrQuery}".\nPlease try a broader city name like "Delhi" or "Mumbai".`,
-            };
-          }
-
-          // ✅ Success
-          return { success: true, data: geoData };
-
-        } catch (err) {
-          console.error(`[API LOG] Geocoding request error:`, err);
-          return { success: false, message: "Unexpected error during geolocation lookup." };
+        if (geoData) {
+          return {
+            success: true,
+            data: geoData,
+            message: `No exact match for "${cityOrQuery}". Showing results for "${cleanedQuery}" instead.`,
+          };
         }
       }
+    }
+
+    // Final check — still no results
+    if (!geoData) {
+      console.warn(`[API LOG] No geocoding result for city: ${cityOrQuery}`);
+      return {
+        success: false,
+        message: `Sorry!! we couldn't find "${cityOrQuery}".\nPlease try a broader city name like "Delhi" or "Mumbai".`,
+      };
+    }
+
+    // ✅ Success
+    return { success: true, data: geoData };
+
+  } catch (err) {
+    console.error(`[API LOG] Geocoding request error:`, err);
+    return { success: false, message: "Unexpected error during geolocation lookup." };
+  }
+}
 
 async function fetchBookingHotels(lat, lon) {
   try {
