@@ -40,7 +40,7 @@ export default function HotelLanding() {
         const data = await res.json();
 
         if (!data.hotels || !data.hotels.length) {
-                       setError("Sorry!! this finder is not configured for region-specific search. /nPlease try specific city/region name like Delhi,Goregaon.");
+                       setError("Sorry!! this finder is not configured for region-specific search. Please try specific city/region name like Delhi,Goregaon.");
                        return;
         }
         // Render hotels instantly
