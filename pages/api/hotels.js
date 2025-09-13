@@ -98,7 +98,7 @@ export default async function handler(req, res) {
             - Review score (highest first)
             - Review count (higher is better)
             - Positive review text (prefer 'Excellent' over 'Good')
-
+        Important: Do not return anything if you get ${hotels.length} as 0.
             Return strictly as JSON:
             {
               "hotels": [ ...top 10 hotels exactly as provided, no extra commentary... ]
