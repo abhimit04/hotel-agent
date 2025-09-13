@@ -174,9 +174,10 @@ export default async function handler(req, res) {
 
 /** Safe geocoding fetch with error handling */
 /** Safe geocoding fetch with error handling */
-async function safeFetchGeo(city) {
+async function safeFetchGeo(location) {
   try {
-    const geoUrl = `https://forward-reverse-geocoding.p.rapidapi.com/v1/forward?city=${encodeURIComponent(city)}&format=json&limit=1`;
+    const geoUrl = `https://forward-reverse-geocoding.p.rapidapi.com/v1/search?q=${encodeURIComponent(location)}&format=json&limit=1`;
+
     const geoResponse = await fetch(geoUrl, {
       headers: {
         "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
@@ -188,6 +189,12 @@ async function safeFetchGeo(city) {
       return null;
     }
     return await geoResponse.json();
+    // The search endpoint returns an array of features. We want the first one.
+        if (data.length > 0) {
+          return data[0];
+        }
+
+        return null;
   } catch (err) {
     console.error(`[API LOG] Geocoding request error:`, err);
     return null;
