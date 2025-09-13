@@ -118,9 +118,9 @@ export default function HotelLanding() {
             </svg>
           </div>
           <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent drop-shadow-lg">
-            Top Hotels Finder
+            Hotel Genie
           </h1>
-          <p className="text-xl text-cyan-100 font-light">Discover your perfect getaway destination</p>
+          <p className="text-xl text-cyan-100 font-light">Smart recommendations powered by intelligent automation.</p>
         </div>
       </header>
 
@@ -387,7 +387,7 @@ export default function HotelLanding() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
             </svg>
             <span className="text-lg font-semibold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
-              Hotel Finder
+              Hotel Genie
             </span>
           </div>
           <p className="text-gray-300">&copy; 2025 AbhiAi. All rights reserved. | Discover. Book. Explore.</p>
