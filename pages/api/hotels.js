@@ -63,7 +63,7 @@ export default async function handler(req, res) {
       error: {
             code: "CITY_NOT_FOUND",
             message: "Sorry!! this finder is not configured for region-specific search. Please try specifying a city like Delhi or Mumbai."
-          });
+          }});
     }
 
     const { lat, lon } = geoData[0];
