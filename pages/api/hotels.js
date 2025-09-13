@@ -157,7 +157,7 @@ export default async function handler(req, res) {
               // Return dummy hotels on any uncaught error
               return res.status(200).json({ hotels: getDummyHotels(city) });
             }
-
+ }
 
 /** Availability Check - Safe */
 //async function enrichAvailability(hotels) {
