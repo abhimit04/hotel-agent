@@ -39,10 +39,11 @@ export default function HotelLanding() {
         const res = await fetch(`/api/hotels?city=${encodeURIComponent(city)}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`);
         const data = await res.json();
 
-//        if (!data.hotels || !data.hotels.length) {
-//                       setError("Sorry!! this finder is not configured for region-specific search. Please try specific city/region name like Delhi,Goregaon.");
-//                       return;
-//        }
+        if (!data.hotels || data.hotels.length==0) {
+                       setError("🔍 We couldn't find any hotels. Try a different location, such as 'South Delhi' or 'Goa'.");
+                       setLoading(false);
+                       return;
+        }
         // Render hotels instantly
         setHotels(data.hotels || []);
 
