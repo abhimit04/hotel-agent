@@ -28,10 +28,7 @@ export default function HotelLanding() {
            return;
          }
 
-         if (!geoData || !geoData.length) {
-               setError("Sorry!! this finder is not configured for region-specific search. /nPlease try specific city/region name like Delhi,Goregaon.");
-               return;
-          }
+
 
       setLoading(true);
       setError('');
@@ -42,6 +39,10 @@ export default function HotelLanding() {
         const res = await fetch(`/api/hotels?city=${encodeURIComponent(city)}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`);
         const data = await res.json();
 
+        if (!data.hotels || !data.hotels.length) {
+                       setError("Sorry!! this finder is not configured for region-specific search. /nPlease try specific city/region name like Delhi,Goregaon.");
+                       return;
+        }
         // Render hotels instantly
         setHotels(data.hotels || []);
 
