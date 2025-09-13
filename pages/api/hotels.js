@@ -43,10 +43,14 @@ export default async function handler(req, res) {
     const { data: dbCache, error: dbError } = await supabase
       .from("hotel_cache")
       .select("data, created_at")
-      .eq("city", cacheKey)
+      .eq("cache_key", cacheKey)
       .order("created_at", { ascending: false })
       .limit(1)
       .single();
+
+    if (dbError && dbError.code !== "PGRST116") { // Ignore 'not found' error
+          console.error("[DB ERROR] Supabase cache lookup failed:", dbError.message);
+      }
 
     if (dbCache && new Date() - new Date(dbCache.created_at) < CACHE_TTL) {
       console.log(`[CACHE] Serving hotels for ${city} from Supabase`);
@@ -91,9 +95,10 @@ export default async function handler(req, res) {
         const sortedHotels = orderBy(hotels, ["review_score", "review_count"], ["desc", "desc"]);
 
          // --- Step 3: Save to cache (memory + supabase) ---
-         memoryCache.set(cacheKey, { data: sortedHotels, timestamp: now });
+        // memoryCache.set(cacheKey, { data: sortedHotels, timestamp: now });
 
         //Send to Gemini for rerank --
+        let topHotels = sortedHotels.slice(0, 10);
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
@@ -110,7 +115,7 @@ export default async function handler(req, res) {
 
             Hotels: ${JSON.stringify(sortedHotels.slice(0, 25))}`;
 
-            let topHotels = sortedHotels.slice(0, 10);
+
             try {
               const rerankResult = await model.generateContent(rerankPrompt);
               const rerankText = rerankResult.response.text().trim();
@@ -125,21 +130,33 @@ export default async function handler(req, res) {
               console.warn("[API LOG] Gemini rerank failed, using numeric fallback");
             }
 
-            await supabase.from("hotel_cache").insert({
-                              city: cacheKey,
-                              data: topHotels,
-                              created_at: new Date().toISOString(),
-             });
+            // --- Step 4: Save to cache (Supabase and memory) ---
+              // Await the insert operation to ensure it completes before returning the response
+              const { error: insertError } = await supabase
+                .from("hotel_cache")
+                .insert({
+                  cache_key: cacheKey,
+                  data: topHotels,
+                  created_at: new Date().toISOString(),
+                });
+             if (insertError) {
+                 console.error("[DB ERROR] Failed to save to Supabase cache:", insertError.message);
+               } else {
+                 console.log(`[CACHE] Successfully saved hotels for ${city} to Supabase`);
+               }
 
-            //topHotels = await enrichAvailability(topHotels);
-            return res.status(200).json({ hotels: topHotels })
+            // Store back to memory for faster access next time
+              memoryCache.set(cacheKey, { data: topHotels, timestamp: now });
 
+              // --- Step 5: Return the final result ---
+              // A single, final return statement is cleaner
+              return res.status(200).json({ hotels: topHotels });
 
-      } catch (error) {
-        console.error("[API LOG] Unexpected error:", error);
-        return res.status(200).json({ hotels: getDummyHotels(city) });
-      }
-    }
+            } catch (error) {
+              console.error("[API LOG] Unexpected error:", error);
+              // Return dummy hotels on any uncaught error
+              return res.status(200).json({ hotels: getDummyHotels(city) });
+            }
 
 
 /** Availability Check - Safe */
