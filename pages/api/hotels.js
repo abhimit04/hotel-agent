@@ -81,7 +81,8 @@ export default async function handler(req, res) {
     console.log(`[API LOG] Total hotels collected: ${hotels.length}`);
 
     if (hotels.length === 0) {
-          return res.status(200).json({ hotels: getDummyHotels(city) });
+          return res.status(400).json({ error: "Sorry!! this is yet not configured for region specific search.
+          Please try a specify city name for optimum results i.e Delhi, Mumbai" });
         }
 
         const sortedHotels = orderBy(hotels, ["review_score", "review_count"], ["desc", "desc"]);
