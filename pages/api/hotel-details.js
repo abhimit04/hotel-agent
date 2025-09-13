@@ -4,7 +4,7 @@
  */
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { getDummyHotelDetails } = require('./dummyData');
+//const { getDummyHotelDetails } = require('./dummyData');
 
 // --- Step 1: Simulate third-party API clients ---
 // In a real application, these functions would make network requests to external APIs.
