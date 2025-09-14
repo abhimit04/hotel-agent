@@ -8,7 +8,8 @@ export default function HotelLanding() {
   const [checkout, setCheckout] = useState('');
   const [hotelName, setHotelName] = useState(''); // NEW: State for single hotel search
   const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [isLoadingList, setIsLoadingList] = useState(false); // NEW: Separate loading state for list search
+  const [isLoadingHotel, setIsLoadingHotel] = useState(false); // NEW: Separate loading state for specific hotel search
   const [error, setError] = useState('');
   const [summary, setSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -30,7 +31,7 @@ export default function HotelLanding() {
       return;
     }
 
-    setLoading(true);
+    setIsLoadingList(true); // Start loading for this specific search
     setError('');
     setHotels([]);
     setSummary('');
@@ -42,7 +43,7 @@ export default function HotelLanding() {
 
       if (!data.hotels || data.hotels.length === 0) {
         setError("🔍 We couldn't find any hotels. Try a different location, such as 'South Delhi' or 'Goa'.");
-        setLoading(false);
+        setIsLoadingList(false);
         return;
       }
 
@@ -54,11 +55,12 @@ export default function HotelLanding() {
       console.error("Error fetching hotels:", err);
       setError("Unable to fetch hotels. Try again.");
     } finally {
-      setLoading(false);
+      setIsLoadingList(false);
     }
   };
 
   const fetchHotelByName = async () => {
+      // The city is a prerequisite for both searches to function correctly.
       if (!hotelName.trim() || !city.trim()) {
         setError("Please enter both a hotel name and a city.");
         return;
@@ -73,7 +75,7 @@ export default function HotelLanding() {
       }
 
 
-      setLoading(true);
+      setIsLoadingHotel(true); // Start loading for this specific search
       setError('');
       setHotels([]);
       setSingleHotelDetails(null);
@@ -86,7 +88,7 @@ export default function HotelLanding() {
 
         if (data.error) {
           setError(data.error.message);
-          setLoading(false);
+          setIsLoadingHotel(false);
           return;
         }
 
@@ -97,7 +99,7 @@ export default function HotelLanding() {
         console.error("Error fetching hotel details:", err);
         setError("Unable to find the hotel. Please try again.");
       } finally {
-        setLoading(false);
+        setIsLoadingHotel(false);
       }
   };
 
@@ -127,12 +129,7 @@ export default function HotelLanding() {
     fetchHotelByName();
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-   const handleHotelKeyPress = (e) => {
+  const handleHotelKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleHotelSearch();
     }
@@ -292,7 +289,6 @@ export default function HotelLanding() {
                   type="text"
                   value={city}
                   onChange={e => setCity(e.target.value)}
-                  onKeyPress={handleKeyPress}
                   placeholder="Enter city"
                   className="w-full p-4 bg-white bg-opacity-90 backdrop-blur-sm border border-white border-opacity-50 rounded-2xl focus:outline-none focus:ring-4 focus:ring-cyan-300 focus:ring-opacity-50 text-gray-800 placeholder-gray-500 shadow-inner transition-all duration-300"
                   required
@@ -331,11 +327,11 @@ export default function HotelLanding() {
               </div>
               <button
                 onClick={handleSearch}
-                disabled={loading || !city.trim()}
+                disabled={isLoadingList || isLoadingHotel || !city.trim()}
                 className="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white p-4 rounded-2xl hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
-                  {loading && !isSingleHotelView ? (
+                  {isLoadingList ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                       Searching...
@@ -378,11 +374,11 @@ export default function HotelLanding() {
               </div>
               <button
                 onClick={handleHotelSearch}
-                disabled={loading || !hotelName.trim() || !city.trim()}
+                disabled={isLoadingHotel || isLoadingList || !hotelName.trim() || !city.trim()}
                 className="relative overflow-hidden bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 text-white p-4 rounded-2xl hover:from-purple-600 hover:via-fuchsia-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
-                  {loading && isSingleHotelView ? (
+                  {isLoadingHotel ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                       Searching...
@@ -403,7 +399,7 @@ export default function HotelLanding() {
         </div>
 
         {/* Status Messages */}
-        {loading && (
+        {(isLoadingList || isLoadingHotel) && (
           <div className="flex items-center gap-3 bg-white bg-opacity-20 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-white border-opacity-30 mb-8">
             <div className="animate-spin rounded-full h-6 w-6 border-2 border-cyan-400 border-t-transparent"></div>
             <p className="text-white font-medium">Searching for the best hotels...</p>
