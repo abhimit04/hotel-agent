@@ -104,6 +104,20 @@ export default function HotelLanding() {
     }
   }
 
+  async function detectQueryType(query) {
+    try {
+      const res = await fetch(`/api/geocode?query=${encodeURIComponent(query)}`);
+      if (!res.ok) return { type: "unknown" };
+
+      const data = await res.json();
+      // Assuming response looks like: { type: "hotel" | "city" | "locality", name, lat, lon }
+      return data;
+    } catch (err) {
+      console.error("detectQueryType error", err);
+      return { type: "unknown" };
+    }
+  }
+
   // ✅ Main Search Handler — updated to NOT fallback to city if hotel name search fails
   const handleSearch = async () => {
     setError("");
@@ -117,9 +131,22 @@ export default function HotelLanding() {
       return;
     }
 
+    // ✅ First step: detect what user typed
+      const detection = await detectQueryType(query);
+
+      if (detection.type === "hotel") {
+        const foundHotel = await fetchHotelDetailsByName(detection.name);
+        if (!foundHotel) setError("No hotels available with that name.");
+        return;
+      }
+
+      if (detection.type === "city" || detection.type === "locality") {
+        await fetchHotelsByCity(detection.name);
+        return;
+      }
     // First try hotel name search
-    const foundHotel = await fetchHotelDetailsByName(query);
-    if (foundHotel) return;
+//    const foundHotel = await fetchHotelDetailsByName(query);
+//    if (foundHotel) return;
 
 //    // If user specifically entered a hotel name and no match found, STOP here
 //    if (hotelName.trim()) {
@@ -127,9 +154,9 @@ export default function HotelLanding() {
 //      return;
 //    }
 
-    // Otherwise fallback to city search
-    await fetchHotelsByCity(query);
-  };
+    setError("No matching city or hotel found. Please try again.");
+    };
+
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") handleSearch();
