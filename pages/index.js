@@ -15,70 +15,117 @@ export default function HotelLanding() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState(null); // <-- NEW: Track selected hotel
 
-  const fetchHotels = async () => {
-       if (!city.trim()) {
-            setError("Please enter a city.");
-         return;
-          }
-         if (!checkin || !checkout) {
-           setError("Please select both check-in and check-out dates.");
-           return;
-         }
-         if (new Date(checkout) <= new Date(checkin)) {
-           setError("Check-out date must be after check-in date.");
-           return;
-         }
-
-
-
-      setLoading(true);
-      setError('');
-      setHotels([]);
-      setSummary('');
-
-      try {
-
-        if (hotelName.trim()) {
-                // ✅ If hotel name is provided, call hotel-details endpoint
-        const res = await fetch(
-                  `/api/hotel-details?hotel_name=${encodeURIComponent(hotelName)}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`
-                );
-
-        const data = await res.json();
-
-        if (res.ok && data.hotels) {
-        setSelectedHotel(data.hotels); // Directly open modal with hotel details
-        return;
-        } else {
-                  setError(data.error || "No matching hotel found. Try a different name.");
-        }
-        }else if (city.trim()) {
-                 // ✅ City-based search (existing flow)
-        const res = await fetch(`/api/hotels?city=${encodeURIComponent(city)}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`);
-        const data = await res.json();
-
-        if (!data.hotels || data.hotels.length==0) {
-                       setError("🔍 We couldn't find any hotels. Try a different location, such as 'South Delhi' or 'Goa'.");
-                       setLoading(false);
-                       return;
-        }
-        // Render hotels instantly
-        setHotels(data.hotels || []);
-
-        if (data.hotels && data.hotels.length > 0) {
-        generateAiSummary(data.hotels, city);
-        // Trigger AI summary in the backgroun
-        }
-
-       }
-      } catch (err) {
-        console.error("Error fetching hotels:", err);
-        setError("Unable to fetch hotels. Try again.");
-      } finally {
-        setLoading(false);
+  const validateDates = () => {
+      if (!checkin || !checkout) {
+        setError("Please select check-in and check-out dates.");
+        return false;
       }
+      if (new Date(checkout) <= new Date(checkin)) {
+        setError("Check-out date must be after check-in date.");
+        return false;
+      }
+      return true;
     };
 
+async function fetchHotelsByCity() {
+    if (!city.trim()) {
+      setError("Please enter a city or locality.");
+      return;
+    }
+    if (!validateDates()) return;
+
+    setLoading(true);
+    setError("");
+    setHotels([]);
+    setSummary("");
+
+    try {
+      const res = await fetch(
+        `/api/hotel?city=${encodeURIComponent(city)}&checkin_date=${encodeURIComponent(
+          checkin
+        )}&checkout_date=${encodeURIComponent(checkout)}`
+      );
+      const data = await res.json();
+
+      if (res.status !== 200) {
+        setError(data?.error?.message || "Failed to fetch hotels.");
+        return;
+      }
+      if (!data.hotels || data.hotels.length === 0) {
+        setError("No hotels found for that location and dates.");
+        return;
+      }
+      setHotels(data.hotels);
+      // Ask the server or separate API to produce an AI summary for the result set:
+      generateAiSummary(data.hotels, city);
+    } catch (err) {
+      console.error("fetchHotelsByCity error", err);
+      setError("Unable to fetch hotels. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  async function fetchHotelDetailsByName(nameToSearch) {
+      if (!nameToSearch || !nameToSearch.trim()) {
+        setError("Please enter a hotel name.");
+        return;
+      }
+      if (!validateDates()) return;
+
+      setSelectedHotelLoading(true);
+      setSelectedHotel(null);
+      setError("");
+      setSummary("");
+
+      try {
+        const res = await fetch(
+          `/api/hotel-details?hotel_name=${encodeURIComponent(
+            nameToSearch
+          )}&city=${encodeURIComponent(city || "")}&checkin_date=${encodeURIComponent(
+            checkin
+          )}&checkout_date=${encodeURIComponent(checkout)}`
+        );
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          setError(data?.error?.message || "Hotel not found.");
+          return;
+        }
+
+        // data.hotel should be the enriched hotel object, data.summary is the AI summary
+        setSelectedHotel(data.hotel || null);
+        if (data.summary) setSummary(data.summary);
+      } catch (err) {
+        console.error("fetchHotelDetailsByName error", err);
+        setError("Unable to fetch hotel details. Try again.");
+      } finally {
+        setSelectedHotelLoading(false);
+      }
+    }
+
+    // Called when user presses the main Search button
+    const handleSearch = async () => {
+      setError("");
+      setHotels([]);
+      setSelectedHotel(null);
+      setSummary("");
+
+      // If hotelName is provided, prefer searching the individual hotel
+      if (hotelName && hotelName.trim()) {
+        await fetchHotelDetailsByName(hotelName.trim());
+        return;
+      }
+
+      // Otherwise do city-based listing
+      await fetchHotelsByCity();
+    };
+
+    // When user clicks "View Details" for a hotel in the list, fetch details via hotel-details endpoint
+    const openHotelDetails = async (h) => {
+      // Prefer using any ID if available, but the backend can also accept name+city
+      const name = h.name || h.hotel_name || "";
+      await fetchHotelDetailsByName(name);
+    };
 
   const generateAiSummary = async (hotelData, searchCity) => {
     setSummaryLoading(true);
@@ -155,10 +202,19 @@ export default function HotelLanding() {
                   value={city}
                   onChange={e => setCity(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Enter city"
+                  placeholder="Enter city, locality or hotel name"
                   className="w-full p-4 bg-white bg-opacity-90 backdrop-blur-sm border border-white border-opacity-50 rounded-2xl focus:outline-none focus:ring-4 focus:ring-cyan-300 focus:ring-opacity-50 text-gray-800 placeholder-gray-500 shadow-inner transition-all duration-300"
                   required
                 />
+                <input
+                     type="text"
+                                  value={hotelName}
+                                  onChange={e => setHotelName(e.target.value)}
+                                  onKeyPress={handleKeyPress}
+                                  //placeholder="Enter city"
+                                  className="w-full p-4 bg-white bg-opacity-90 backdrop-blur-sm border border-white border-opacity-50 rounded-2xl focus:outline-none focus:ring-4 focus:ring-cyan-300 focus:ring-opacity-50 text-gray-800 placeholder-gray-500 shadow-inner transition-all duration-300"
+                                  required
+                                />
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -194,7 +250,7 @@ export default function HotelLanding() {
 
               <button
                 onClick={handleSearch}
-                disabled={loading || !city.trim()}
+                disabled={loading || selectedHotelLoading || (!city.trim() && !hotelName.trim())}
                 className="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white p-4 rounded-2xl hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
@@ -205,13 +261,24 @@ export default function HotelLanding() {
                     </>
                   ) : (
                     <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
                       </svg>
-                      Search Hotels
+                      {hotelName.trim() ? "Find Hotel" : "Search Hotels"}
                     </>
                   )}
                 </span>
+
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-20 transform -skew-x-12 transition-all duration-700"></div>
               </button>
             </div>
@@ -222,7 +289,7 @@ export default function HotelLanding() {
         {loading && (
           <div className="flex items-center gap-3 bg-white bg-opacity-20 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-white border-opacity-30 mb-8">
             <div className="animate-spin rounded-full h-6 w-6 border-2 border-cyan-400 border-t-transparent"></div>
-            <p className="text-white font-medium">Searching for the best hotels...</p>
+            <p className="text-white font-medium">Finding...</p>
             <p className="text-white font-medium">This might take 15-20 sec depending on API response & AI analysis...</p>
           </div>
         )}
@@ -239,60 +306,79 @@ export default function HotelLanding() {
         )}
 
         {/* Hotels Grid */}
-        <div className="w-full max-w-7xl grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          {hotels.map(h => (
-            <div
-              key={h.id}
-              className="group bg-white bg-opacity-15 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-white border-opacity-30 hover:bg-opacity-25 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-3xl"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                  <span className="text-emerald-300 text-sm font-medium">AI Recommeds</span>
-                </div>
-                <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-xs font-bold">
-                  TOP RATED
-                </div>
-              </div>
+        {hotels.length > 0 && (
+          <div className="w-full max-w-7xl grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            {hotels.map(h => (
+              <div
+                key={h.id}
+                className="group bg-white bg-opacity-15 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-white border-opacity-30 hover:bg-opacity-25 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-3xl"
+              >
+                {/* Top Section */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span className="text-emerald-300 text-sm font-medium">
+                      {hotelName?.trim()
+                        ? "Direct Match"
+                        : "AI Recommends"}
+                    </span>
+                  </div>
 
-              <h3 className="font-bold text-2xl mb-3 text-white group-hover:text-cyan-200 transition-colors duration-300">
-                {h.name}
-              </h3>
-
-              <div className="space-y-3 text-gray-200">
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  </svg>
-                  <p className="text-sm">{h.address}</p>
+                  {!hotelName?.trim() && (
+                    <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-xs font-bold">
+                      TOP RATED
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <p className="font-semibold">Review Score: <span className="text-yellow-300">{h.review_score}</span> ({h.review_count} reviews)</p>
+                {/* Hotel Name */}
+                <h3 className="font-bold text-2xl mb-3 text-white group-hover:text-cyan-200 transition-colors duration-300">
+                  {h.name}
+                </h3>
+
+                {/* Hotel Details */}
+                <div className="space-y-3 text-gray-200">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    </svg>
+                    <p className="text-sm">{h.address}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <p className="font-semibold">
+                      Review Score: <span className="text-yellow-300">{h.review_score}</span> ({h.review_count} reviews)
+                    </p>
+                  </div>
+
+                  {h.agent_score && (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="font-semibold">
+                        Agent Score: <span className="text-emerald-300">{h.agent_score}</span>
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="font-semibold">Agent Score: <span className="text-emerald-300">{h.agent_score}</span></p>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-white border-opacity-20">
-                <button
-                onClick={() => setSelectedHotel(h)}
-                className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-cyan-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                {/* CTA */}
+                <div className="mt-6 pt-4 border-t border-white border-opacity-20">
+                  <button
+                    onClick={() => setSelectedHotel(h)}
+                    className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-cyan-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
-                  View Details
-                </button>
+                    {hotelName?.trim() ? "View Hotel Details" : "View Details"}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
          {/* Modal for Hotel Details */}
               {selectedHotel && (
