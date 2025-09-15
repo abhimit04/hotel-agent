@@ -46,8 +46,8 @@ export default function HotelLanding() {
 
         const data = await res.json();
 
-        if (res.ok && data.hotel) {
-        setSelectedHotel(data.hotel); // Directly open modal with hotel details
+        if (res.ok && data.hotels) {
+        setSelectedHotel(data.hotels); // Directly open modal with hotel details
         return;
         } else {
                   setError(data.error || "No matching hotel found. Try a different name.");
