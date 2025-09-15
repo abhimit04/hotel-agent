@@ -121,11 +121,11 @@ export default function HotelLanding() {
     const foundHotel = await fetchHotelDetailsByName(query);
     if (foundHotel) return;
 
-    // If user specifically entered a hotel name and no match found, STOP here
-    if (hotelName.trim()) {
-      setError("No hotels available with that name for the selected dates.");
-      return;
-    }
+//    // If user specifically entered a hotel name and no match found, STOP here
+//    if (hotelName.trim()) {
+//      setError("No hotels available with that name for the selected dates.");
+//      return;
+//    }
 
     // Otherwise fallback to city search
     await fetchHotelsByCity(query);
@@ -254,7 +254,7 @@ export default function HotelLanding() {
 
               <button
                 onClick={handleSearch}
-                disabled={loading || selectedHotelLoading || (!city.trim() && !hotelName.trim())}
+                disabled={loading || selectedHotelLoading || !searchQuery.trim()}
                 className="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white p-4 rounded-2xl hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
@@ -278,7 +278,7 @@ export default function HotelLanding() {
                           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                         />
                       </svg>
-                      {hotelName.trim() ? "Find Hotel" : "Search Hotels"}
+                      Search Hotels
                     </>
                   )}
                 </span>
@@ -391,7 +391,7 @@ export default function HotelLanding() {
                     {/* Close Button */}
                     <button
                       className="absolute top-3 right-3 text-gray-600 hover:text-black"
-                      onClick={() => openHotelDetails(h)}
+                      onClick={() => setSelectedHotel(null)}
                     >
                       ✕
                     </button>
