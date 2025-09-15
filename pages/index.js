@@ -13,6 +13,7 @@ export default function HotelLanding() {
   const [error, setError] = useState('');
   const [summary, setSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [selectedHotelLoading, setSelectedHotelLoading] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState(null); // <-- NEW: Track selected hotel
 
   const validateDates = () => {
