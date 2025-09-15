@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useRouter } from "next/router";
 
 export default function HotelLanding() {
   const [city, setCity] = useState('');
@@ -15,6 +16,7 @@ export default function HotelLanding() {
   const [selectedHotelLoading, setSelectedHotelLoading] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
 
   const validateDates = () => {
     if (!checkin || !checkout) {
@@ -74,34 +76,43 @@ export default function HotelLanding() {
     }
     if (!validateDates()) return false;
 
-    setSelectedHotelLoading(true);
-    setSelectedHotel(null);
-    setError("");
-    setSummary("");
+//    setSelectedHotelLoading(true);
+//    setSelectedHotel(null);
+//    setError("");
+//    setSummary("");
 
     try {
-      const res = await fetch(
-        `/api/hotel-details?hotel_name=${encodeURIComponent(
-          nameToSearch
-        )}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`
-      );
-      const data = await res.json();
-
-      if (!res.ok || data.error || !data.hotel) {
-        console.warn(`[API LOG] No exact hotel match for "${nameToSearch}"`);
-        return false;
-      }
-
-      setSelectedHotel(data.hotel);
-      if (data.summary) setSummary(data.summary);
-      return true;
+//      const res = await fetch(
+//        `/api/hotel-details?hotel_name=${encodeURIComponent(
+//          nameToSearch
+//        )}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`
+//      );
+//      const data = await res.json();
+//
+//      if (!res.ok || data.error || !data.hotel) {
+//        console.warn(`[API LOG] No exact hotel match for "${nameToSearch}"`);
+//        return false;
+//      }
+//
+//      setSelectedHotel(data.hotel);
+//      if (data.summary) setSummary(data.summary);
+//      return true;
+        // Navigate to details page instead of fetching directly
+           router.push({
+        pathname: `/hotel/${encodeURIComponent(nameToSearch)}`,
+        query: {
+        checkin_date: checkin,
+        checkout_date: checkout
+         }
+        });
+        return true;
     } catch (err) {
       console.error("fetchHotelDetailsByName error", err);
       setError("Unable to fetch hotel details. Try again.");
       return false;
-    } finally {
-      setSelectedHotelLoading(false);
-    }
+//    } finally {
+//      setSelectedHotelLoading(false);
+//    }
   }
 
   async function detectQueryType(query) {
@@ -401,10 +412,15 @@ export default function HotelLanding() {
                 {/* CTA */}
                 <div className="mt-6 pt-4 border-t border-white border-opacity-20">
                   <button
-                    onClick={() => setSelectedHotel(h)}
+                    onClick={() =>
+                    router.push({
+                          pathname: `/hotel/${encodeURIComponent(h.name)}`,
+                          query: { checkin_date: checkin, checkout_date: checkout }
+                        })
+                      }
                     className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-cyan-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
-                    {hotelName?.trim() ? "View Hotel Details" : "View Details"}
+                  View Hotel Details
                   </button>
                 </div>
               </div>
@@ -412,45 +428,45 @@ export default function HotelLanding() {
           </div>
         )}
 
-         {/* Modal for Hotel Details */}
-              {selectedHotel && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-                  <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full relative">
-                    {/* Close Button */}
-                    <button
-                      className="absolute top-3 right-3 text-gray-600 hover:text-black"
-                      onClick={() => setSelectedHotel(null)}
-                    >
-                      ✕
-                    </button>
+//         {/* Modal for Hotel Details */}
+//              {selectedHotel && (
+//                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+//                  <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full relative">
+//                    {/* Close Button */}
+//                    <button
+//                      className="absolute top-3 right-3 text-gray-600 hover:text-black"
+//                      onClick={() => setSelectedHotel(null)}
+//                    >
+//                      ✕
+//                    </button>
+//
+//                    <h2 className="text-2xl font-bold text-gray-800 mb-3">{selectedHotel.name}</h2>
+//                    <p className="text-gray-700 mb-2">{selectedHotel.address}</p>
+//                    <p className="text-gray-600 mb-4">
+//                      Review Score: <strong>{selectedHotel.review_score}</strong> ({selectedHotel.review_count} reviews)
+//                    </p>
+//                    <p className="text-gray-600 mb-6">
+//                      Agent Score: <strong>{selectedHotel.agent_score}</strong>
+//                    </p>
 
-                    <h2 className="text-2xl font-bold text-gray-800 mb-3">{selectedHotel.name}</h2>
-                    <p className="text-gray-700 mb-2">{selectedHotel.address}</p>
-                    <p className="text-gray-600 mb-4">
-                      Review Score: <strong>{selectedHotel.review_score}</strong> ({selectedHotel.review_count} reviews)
-                    </p>
-                    <p className="text-gray-600 mb-6">
-                      Agent Score: <strong>{selectedHotel.agent_score}</strong>
-                    </p>
-
-                    {/* Hyperlink to source */}
-
-                      <a
-                        href={
-                          selectedHotel.source_url
-                            ? selectedHotel.source_url
-                            : `https://www.google.com/search?q=${encodeURIComponent(`${selectedHotel.name} ${city}`)}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block w-full text-center bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-lg"
-                      >
-                        View on {selectedHotel.source_name || "Google"}
-                      </a>
-
-                  </div>
-                </div>
-              )}
+//                    {/* Hyperlink to source */}
+//
+//                      <a
+//                        href={
+//                          selectedHotel.source_url
+//                            ? selectedHotel.source_url
+//                            : `https://www.google.com/search?q=${encodeURIComponent(`${selectedHotel.name} ${city}`)}`
+//                        }
+//                        target="_blank"
+//                        rel="noopener noreferrer"
+//                        className="inline-block w-full text-center bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-lg"
+//                      >
+//                        View on {selectedHotel.source_name || "Google"}
+//                      </a>
+//
+//                  </div>
+//                </div>
+//              )}
 
 
         {/* AI Summary Section */}
