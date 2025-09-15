@@ -147,17 +147,17 @@ async function fetchHotelsByCity() {
     }
   };
 
-  const handleSearch = () => {
-    if (city.trim()) {
-      fetchHotels({ preventDefault: () => {} });
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
+//  const handleSearch = () => {
+//    if (city.trim()) {
+//      fetchHotels({ preventDefault: () => {} });
+//    }
+//  };
+//
+//  const handleKeyPress = (e) => {
+//    if (e.key === 'Enter') {
+//      handleSearch();
+//    }
+//  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 relative overflow-hidden">
