@@ -141,7 +141,7 @@ export default function HotelLanding() {
         return;
       }
 
-      if (detection.type === "city" || detection.type === "region") {
+      if (detection.type === "city" || detection.type === "region" || detection.type === "district" || detection.type === "locality") {
         await fetchHotelsByCity(detection.name);
         return;
       }
