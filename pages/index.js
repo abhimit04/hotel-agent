@@ -113,7 +113,7 @@ export default function HotelLanding() {
 //    } finally {
 //      setSelectedHotelLoading(false);
 //    }
-  }
+     }
   }
 
   async function detectQueryType(query) {
