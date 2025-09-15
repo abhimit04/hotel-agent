@@ -14,6 +14,7 @@ export default function HotelLanding() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [selectedHotelLoading, setSelectedHotelLoading] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const validateDates = () => {
     if (!checkin || !checkout) {
@@ -110,7 +111,7 @@ export default function HotelLanding() {
     setSelectedHotel(null);
     setSummary("");
 
-    const query = (hotelName || city).trim();
+    const query = searchQuery.trim();
     if (!query) {
       setError("Please enter a city, locality, or hotel name.");
       return;
@@ -211,13 +212,9 @@ export default function HotelLanding() {
               <div className="relative">
                 <input
                   type="text"
-                  value={hotelName || city}
-                  onChange={e => {
-                    const val = e.target.value;
-                    setCity(val);
-                    setHotelName(val); // keep both in sync
-                  }}
-                  onKeyDown={e => e.key === "Enter" && handleSearch()} // use onKeyDown (preferred)
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}// use onKeyDown (preferred)
                   placeholder="Enter city, locality, or hotel name"
                   className="w-full p-4 bg-white bg-opacity-90 backdrop-blur-sm border border-white border-opacity-50 rounded-2xl focus:outline-none focus:ring-4 focus:ring-cyan-300 focus:ring-opacity-50 text-gray-800 placeholder-gray-500 shadow-inner transition-all duration-300"
                 />
