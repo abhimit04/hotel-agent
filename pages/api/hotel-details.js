@@ -1,164 +1,215 @@
-/**
- * @fileoverview API endpoint for fetching and summarizing a single hotel.
- * This file demonstrates the backend logic for the new feature.
- */
+// pages/api/hotel-details.js
+import fetch from "node-fetch";
+import { createClient } from "@supabase/supabase-js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import orderBy from "lodash/orderBy";
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-//const { getDummyHotelDetails } = require('./dummyData');
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// --- Step 1: Simulate third-party API clients ---
-// In a real application, these functions would make network requests to external APIs.
-// For this example, we return a mock hotel object.
+export default async function handler(req, res) {
+  const { hotel_name, checkin_date, checkout_date } = req.query;
 
-const bookingHotels = async (hotelName, city, checkin, checkout) => {
-    console.log(`Searching Booking.com for "${hotelName}"`);
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const data = getDummyHotelDetails(hotelName);
-            if (data) {
-                resolve({
-                    ...data,
-                    source: 'Booking.com',
-                    url: `https://www.booking.com/search?q=${encodeURIComponent(hotelName)}`,
-                });
-            } else {
-                resolve(null);
-            }
-        }, 500); // Simulate network delay
+  // ✅ Validate required params
+  if (!hotel_name || !checkin_date || !checkout_date) {
+    return res.status(400).json({
+      error:
+        "hotel_name, checkin_date, and checkout_date are required parameters",
     });
-};
+  }
 
-const tripAdvisorHotels = async (hotelName, city, checkin, checkout) => {
-    console.log(`Searching TripAdvisor for "${hotelName}"`);
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const data = getDummyHotelDetails(hotelName);
-            if (data) {
-                resolve({
-                    ...data,
-                    source: 'TripAdvisor',
-                    url: `https://www.tripadvisor.com/search?q=${encodeURIComponent(hotelName)}`,
-                });
-            } else {
-                resolve(null);
-            }
-        }, 700);
-    });
-};
+  if (new Date(checkout_date) <= new Date(checkin_date)) {
+    return res
+      .status(400)
+      .json({ error: "Check-out date must be after check-in date" });
+  }
 
-const travelAdvisorHotels = async (hotelName, city, checkin, checkout) => {
-    console.log(`Searching TravelAdvisor for "${hotelName}"`);
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const data = getDummyHotelDetails(hotelName);
-            if (data) {
-                resolve({
-                    ...data,
-                    source: 'TravelAdvisor',
-                    url: `https://www.traveladvisor.com/search?q=${encodeURIComponent(hotelName)}`,
-                });
-            } else {
-                resolve(null);
-            }
-        }, 600);
-    });
-};
+  console.log(
+    `[API LOG] Fetching hotel details for: ${hotel_name} between ${checkin_date} - ${checkout_date}`
+  );
 
-// --- Step 2: Search and aggregate data from multiple APIs ---
-const fetchHotelByNameFromApi = async (hotelName, city, checkin, checkout) => {
-    // Run all API calls in parallel to speed up the process.
-    const results = await Promise.allSettled([
-        bookingHotels(hotelName, city, checkin, checkout),
-        tripAdvisorHotels(hotelName, city, checkin, checkout),
-        travelAdvisorHotels(hotelName, city, checkin, checkout),
+  try {
+    // --- Step 1: Try cache first (Supabase) ---
+    const cacheKey = `${hotel_name.toLowerCase()}_${checkin_date}_${checkout_date}`;
+    const { data: dbCache, error: dbError } = await supabase
+      .from("hotel_cache")
+      .select("data, created_at")
+      .eq("cache_key", cacheKey)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (dbError && dbError.code !== "PGRST116") {
+      console.error("[DB ERROR] Supabase cache lookup failed:", dbError.message);
+    }
+
+    if (dbCache) {
+      console.log(`[CACHE] Serving hotel details for ${hotel_name} from Supabase`);
+      return res.status(200).json({ hotel: dbCache.data });
+    }
+
+    // --- Step 2: Fetch hotels from your existing APIs ---
+    const [bookingHotels, tripAdvisorHotels, travelAdvisorHotels] =
+      await Promise.allSettled([
+        fetchBookingHotelsByName(hotel_name, checkin_date, checkout_date),
+        fetchTripAdvisorHotelsByName(hotel_name),
+        fetchTravelAdvisorHotelsByName(hotel_name),
+      ]);
+
+    let hotels = [
+      ...(bookingHotels.status === "fulfilled" ? bookingHotels.value : []),
+      ...(tripAdvisorHotels.status === "fulfilled"
+        ? tripAdvisorHotels.value
+        : []),
+      ...(travelAdvisorHotels.status === "fulfilled"
+        ? travelAdvisorHotels.value
+        : []),
+    ];
+
+    if (!hotels || hotels.length === 0) {
+      console.warn(`[API LOG] No results found for: ${hotel_name}`);
+      return res.status(404).json({
+        error: `No results found for "${hotel_name}"`,
+      });
+    }
+
+    // --- Step 3: Sort and take the most relevant match ---
+    const sortedHotels = orderBy(hotels, ["review_score", "review_count"], [
+      "desc",
+      "desc",
     ]);
 
-    let mergedHotel = null;
+    let matchedHotel = sortedHotels[0];
 
-    // Aggregate data from successful API calls
-    results.forEach(result => {
-        if (result.status === 'fulfilled' && result.value) {
-            const hotelData = result.value;
-            if (!mergedHotel) {
-                mergedHotel = {
-                    ...hotelData,
-                    sources: [{ name: hotelData.source, url: hotelData.url }]
-                };
-            } else {
-                // Merge data from other sources.
-                // This is a simple merge; a real-world app would have more complex logic
-                // to handle conflicting data (e.g., different review scores).
-                mergedHotel.sources.push({ name: hotelData.source, url: hotelData.url });
-                if (hotelData.review_score && hotelData.review_count) {
-                    const totalReviews = mergedHotel.review_count + hotelData.review_count;
-                    if (totalReviews > 0) {
-                        mergedHotel.review_score = (
-                            (mergedHotel.review_score * mergedHotel.review_count) +
-                            (hotelData.review_score * hotelData.review_count)
-                        ) / totalReviews;
-                        mergedHotel.review_count = totalReviews;
-                    }
-                }
-            }
-        }
+    // --- Step 4: Optional AI enrichment with Gemini ---
+    try {
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+      const summaryPrompt = `You are a travel assistant. Summarize this hotel:
+      - Name: ${matchedHotel.name}
+      - Address: ${matchedHotel.address}
+      - Review Score: ${matchedHotel.review_score}
+      - Review Count: ${matchedHotel.review_count}
+      - Description: ${matchedHotel.review_text}
+
+      Write a 3-4 sentence engaging summary that highlights its best features (cleanliness, location, value, guest reviews).
+      Return only the summary text, no JSON, no code.`;
+
+      const aiResult = await model.generateContent(summaryPrompt);
+      matchedHotel.ai_summary = aiResult.response.text().trim();
+    } catch (err) {
+      console.warn("[API LOG] Gemini AI enrichment failed, skipping summary");
+    }
+
+    // --- Step 5: Save to cache ---
+    await supabase.from("hotel_cache").insert({
+      cache_key: cacheKey,
+      data: matchedHotel,
+      created_at: new Date().toISOString(),
     });
 
-    return mergedHotel;
-};
-
-// --- API Endpoint Handler ---
-async function handleHotelDetails(req, res) {
-    const { hotel_name, city, checkin_date, checkout_date } = req.query;
-
-    if (!hotel_name || !city || !checkin_date || !checkout_date) {
-        return res.status(400).json({ error: { message: "Hotel name, city, and dates are required." } });
-    }
-
-    try {
-        // Fetch data for the specific hotel from multiple sources
-        const hotel = await fetchHotelByNameFromApi(hotel_name, city, checkin_date, checkout_date);
-
-        if (!hotel) {
-            return res.status(200).json({ error: { message: `No hotel found with the name "${hotel_name}".` } });
-        }
-
-        // --- Step 3: Use Gemini to generate a summary for the single hotel ---
-        let summary = '';
-        try {
-            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-            // Create a detailed prompt with the collated data
-            const summaryPrompt = `You are a hotel review assistant. Based on the following hotel details and reviews, provide a concise and engaging summary for a traveler. Highlight key features, amenities, and overall vibe.
-
-            Hotel Details:
-            - Name: ${hotel.name}
-            - Address: ${hotel.address}
-            - Review Score: ${hotel.review_score ? hotel.review_score.toFixed(1) : 'N/A'} (${hotel.review_count} reviews)
-            - Description: ${hotel.description || 'No description available.'}
-            - Amenities: ${hotel.amenities.join(', ') || 'No amenities listed.'}
-            - Sources: ${hotel.sources.map(s => s.name).join(', ')}
-
-            Return the summary as a single paragraph. Do not use a header or title.`;
-
-            const result = await model.generateContent(summaryPrompt);
-            summary = result.response.text().trim();
-        } catch (err) {
-            console.error("Gemini summary generation failed:", err);
-            summary = "AI analysis is currently unavailable. Please check the hotel details below.";
-        }
-
-        // --- Step 4: Return the hotel details and summary ---
-        return res.status(200).json({
-            hotel: hotel,
-            summary: summary,
-        });
-
-    } catch (err) {
-        console.error("Error in hotel-details API handler:", err);
-        return res.status(500).json({ error: { message: "Internal server error." } });
-    }
+    return res.status(200).json({ hotel: matchedHotel });
+  } catch (error) {
+    console.error("[API LOG] Unexpected error in hotel-details:", error);
+    return res
+      .status(500)
+      .json({ error: "Internal server error while fetching hotel details" });
+  }
 }
 
-// In a real Node.js environment, you would export and use this function:
-// module.exports = handleHotelDetails;
+// --- Helper functions for name-based searches ---
+async function fetchBookingHotelsByName(name, checkin, checkout) {
+  try {
+    const url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(
+      name
+    )}&locale=en-gb`;
+    const response = await fetch(url, {
+      headers: {
+        "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+        "X-RapidAPI-Host": "booking-com.p.rapidapi.com",
+      },
+    });
+
+    if (!response.ok) return [];
+
+    const json = await response.json();
+
+    return json
+      .map((h) => ({
+        id: h.dest_id,
+        name: h.label,
+        address: h.city_name,
+        review_score: Number(h.review_score) || 0,
+        review_count: Number(h.review_count) || 0,
+        image_url: h.image_url || null,
+      }))
+      .filter((h) =>
+        h.name.toLowerCase().includes(name.toLowerCase())
+      );
+  } catch (err) {
+    console.error("[API LOG] Booking.com name search error:", err);
+    return [];
+  }
+}
+
+async function fetchTripAdvisorHotelsByName(name) {
+  try {
+    const url = `https://tripadvisor16.p.rapidapi.com/api/v1/hotels/searchLocation?query=${encodeURIComponent(
+      name
+    )}`;
+    const response = await fetch(url, {
+      headers: {
+        "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+        "X-RapidAPI-Host": "tripadvisor16.p.rapidapi.com",
+      },
+    });
+
+    if (!response.ok) return [];
+
+    const json = await response.json();
+
+    return (json.data || []).map((h) => ({
+      id: h.location_id,
+      name: h.name,
+      address: h.address,
+      review_score: Number(h.rating) || 0,
+      review_count: Number(h.num_reviews) || 0,
+      image_url: h.photo?.images?.large?.url || null,
+    }));
+  } catch (err) {
+    console.error("[API LOG] TripAdvisor name search error:", err);
+    return [];
+  }
+}
+
+async function fetchTravelAdvisorHotelsByName(name) {
+  try {
+    const url = `https://travel-advisor.p.rapidapi.com/locations/search?query=${encodeURIComponent(
+      name
+    )}&limit=3&lang=en_IN&currency=INR`;
+    const response = await fetch(url, {
+      headers: {
+        "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+        "X-RapidAPI-Host": "travel-advisor.p.rapidapi.com",
+      },
+    });
+
+    if (!response.ok) return [];
+
+    const json = await response.json();
+
+    return (json.data || [])
+      .filter((x) => x.result_type === "lodging")
+      .map((h) => ({
+        id: h.result_object.location_id,
+        name: h.result_object.name,
+        address: h.result_object.address,
+        review_score: Number(h.result_object.rating) || 0,
+        review_count: Number(h.result_object.num_reviews) || 0,
+        image_url: h.result_object.photo?.images?.large?.url || null,
+      }));
+  } catch (err) {
+    console.error("[API LOG] TravelAdvisor name search error:", err);
+    return [];
+  }
+}

@@ -8,6 +8,7 @@ export default function HotelLanding() {
   const [checkout, setCheckout] = useState('');
   const [geoData, setGeoData] = useState('');
   const [hotels, setHotels] = useState([]);
+  const [hotelName, setHotelName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [summary, setSummary] = useState('');
@@ -36,6 +37,21 @@ export default function HotelLanding() {
       setSummary('');
 
       try {
+
+        if (hotelName.trim()) {
+                // ✅ If hotel name is provided, call hotel-details endpoint
+        const res = await fetch(
+                  `/api/hotel-details?hotel_name=${encodeURIComponent(hotelName)}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`
+                );
+
+        const data = await res.json();
+        if (res.ok && data.hotel) {
+        setSelectedHotel(data.hotel); // Directly open modal with hotel details
+        return;
+        } else {
+                  setError(data.error || "No matching hotel found. Try a different name.");
+        }else if (city.trim()) {
+                 // ✅ City-based search (existing flow)
         const res = await fetch(`/api/hotels?city=${encodeURIComponent(city)}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`);
         const data = await res.json();
 
