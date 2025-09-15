@@ -45,11 +45,13 @@ export default function HotelLanding() {
                 );
 
         const data = await res.json();
+
         if (res.ok && data.hotel) {
         setSelectedHotel(data.hotel); // Directly open modal with hotel details
         return;
         } else {
                   setError(data.error || "No matching hotel found. Try a different name.");
+        }
         }else if (city.trim()) {
                  // ✅ City-based search (existing flow)
         const res = await fetch(`/api/hotels?city=${encodeURIComponent(city)}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`);
@@ -66,7 +68,9 @@ export default function HotelLanding() {
         if (data.hotels && data.hotels.length > 0) {
         generateAiSummary(data.hotels, city);
         // Trigger AI summary in the backgroun
-      }
+        }
+
+       }
       } catch (err) {
         console.error("Error fetching hotels:", err);
         setError("Unable to fetch hotels. Try again.");
