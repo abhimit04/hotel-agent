@@ -206,22 +206,17 @@ async function fetchHotelsByCity() {
               <div className="relative">
                 <input
                   type="text"
-                  value={city}
-                  onChange={e => setCity(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Enter city, locality or hotel name"
+                  value={hotelName || city}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setCity(val);
+                    setHotelName(val); // keep both in sync
+                  }}
+                  onKeyDown={e => e.key === "Enter" && handleSearch()} // use onKeyDown (preferred)
+                  placeholder="Enter city, locality, or hotel name"
                   className="w-full p-4 bg-white bg-opacity-90 backdrop-blur-sm border border-white border-opacity-50 rounded-2xl focus:outline-none focus:ring-4 focus:ring-cyan-300 focus:ring-opacity-50 text-gray-800 placeholder-gray-500 shadow-inner transition-all duration-300"
-                  required
                 />
-                <input
-                     type="text"
-                                  value={hotelName}
-                                  onChange={e => setHotelName(e.target.value)}
-                                  onKeyPress={handleKeyPress}
-                                  //placeholder="Enter city"
-                                  className="w-full p-4 bg-white bg-opacity-90 backdrop-blur-sm border border-white border-opacity-50 rounded-2xl focus:outline-none focus:ring-4 focus:ring-cyan-300 focus:ring-opacity-50 text-gray-800 placeholder-gray-500 shadow-inner transition-all duration-300"
-                                  required
-                                />
+
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
