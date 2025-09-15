@@ -1,4 +1,5 @@
 // pages/api/hotel-details.js
+// pages/api/hotel-details.js
 import fetch from "node-fetch";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -6,29 +7,43 @@ import orderBy from "lodash/orderBy";
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
+async function safeFetchGeo(location) {
+  try {
+    const geoUrl = `https://forward-reverse-geocoding.p.rapidapi.com/v1/search?q=${encodeURIComponent(
+      location
+    )}&format=json&limit=1`;
+    const geoResponse = await fetch(geoUrl, {
+      headers: {
+        "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+        "X-RapidAPI-Host": "forward-reverse-geocoding.p.rapidapi.com",
+      },
+    });
+    if (!geoResponse.ok) return null;
+    const data = await geoResponse.json();
+    return Array.isArray(data) && data.length > 0 ? data[0] : null;
+  } catch (err) {
+    console.error("[API LOG] Geocoding error:", err);
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   const { hotel_name, checkin_date, checkout_date } = req.query;
 
-  // ✅ Validate required params
   if (!hotel_name || !checkin_date || !checkout_date) {
     return res.status(400).json({
-      error:
-        "hotel_name, checkin_date, and checkout_date are required parameters",
+      error: "hotel_name, checkin_date, and checkout_date are required parameters",
     });
   }
 
   if (new Date(checkout_date) <= new Date(checkin_date)) {
-    return res
-      .status(400)
-      .json({ error: "Check-out date must be after check-in date" });
+    return res.status(400).json({ error: "Check-out date must be after check-in date" });
   }
 
-  console.log(
-    `[API LOG] Fetching hotel details for: ${hotel_name} between ${checkin_date} - ${checkout_date}`
-  );
+  console.log(`[API LOG] Fetching hotel details for: ${hotel_name}`);
 
   try {
-    // --- Step 1: Try cache first (Supabase) ---
+    // --- Step 1: Cache check ---
     const cacheKey = `${hotel_name.toLowerCase()}_${checkin_date}_${checkout_date}`;
     const { data: dbCache, error: dbError } = await supabase
       .from("hotel_cache")
@@ -47,61 +62,58 @@ export default async function handler(req, res) {
       return res.status(200).json({ hotel: dbCache.data });
     }
 
-    // --- Step 2: Fetch hotels from your existing APIs ---
-    const [bookingHotels, tripAdvisorHotels, travelAdvisorHotels] =
-      await Promise.allSettled([
-        fetchBookingHotelsByName(hotel_name, checkin_date, checkout_date),
-        fetchTripAdvisorHotelsByName(hotel_name),
-        fetchTravelAdvisorHotelsByName(hotel_name),
-      ]);
+    // --- Step 2: Geocode to get lat/lon (only for better match) ---
+    const geo = await safeFetchGeo(hotel_name);
+    let lat = geo?.lat;
+    let lon = geo?.lon;
+
+    if (geo) {
+      console.log(`[API LOG] Geocoded "${hotel_name}" → lat:${lat}, lon:${lon}`);
+    }
+
+    // --- Step 3: Fetch from all hotel APIs (STRICT mode: no fallback to city search) ---
+    const [bookingHotels, tripAdvisorHotels, travelAdvisorHotels] = await Promise.allSettled([
+      fetchBookingHotelsByName(hotel_name, checkin_date, checkout_date, lat, lon),
+      fetchTripAdvisorHotelsByName(hotel_name),
+      fetchTravelAdvisorHotelsByName(hotel_name),
+    ]);
 
     let hotels = [
       ...(bookingHotels.status === "fulfilled" ? bookingHotels.value : []),
-      ...(tripAdvisorHotels.status === "fulfilled"
-        ? tripAdvisorHotels.value
-        : []),
-      ...(travelAdvisorHotels.status === "fulfilled"
-        ? travelAdvisorHotels.value
-        : []),
+      ...(tripAdvisorHotels.status === "fulfilled" ? tripAdvisorHotels.value : []),
+      ...(travelAdvisorHotels.status === "fulfilled" ? travelAdvisorHotels.value : []),
     ];
 
+    // ✅ STRICT MODE: if no hotels found, return immediately — no city fallback
     if (!hotels || hotels.length === 0) {
-      console.warn(`[API LOG] No results found for: ${hotel_name}`);
-      return res.status(404).json({
-        error: `No results found for "${hotel_name}"`,
-      });
+      console.warn(`[API LOG] No hotels found for: ${hotel_name}`);
+      return res.status(404).json({ error: `No hotels available for "${hotel_name}"` });
     }
 
-    // --- Step 3: Sort and take the most relevant match ---
-    const sortedHotels = orderBy(hotels, ["review_score", "review_count"], [
-      "desc",
-      "desc",
-    ]);
-
+    // --- Step 4: Sort & pick best match ---
+    const sortedHotels = orderBy(hotels, ["review_score", "review_count"], ["desc", "desc"]);
     let matchedHotel = sortedHotels[0];
 
-    // --- Step 4: Optional AI enrichment with Gemini ---
+    // --- Step 5: AI summary enrichment ---
     try {
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const summaryPrompt = `You are a travel assistant. Summarize this hotel:
-      - Name: ${matchedHotel.name}
-      - Address: ${matchedHotel.address}
-      - Review Score: ${matchedHotel.review_score}
-      - Review Count: ${matchedHotel.review_count}
-      - Description: ${matchedHotel.review_text}
+      Name: ${matchedHotel.name}
+      Address: ${matchedHotel.address}
+      Review Score: ${matchedHotel.review_score}
+      Review Count: ${matchedHotel.review_count}
+      Description: ${matchedHotel.review_text}
 
-      Write a 3-4 sentence engaging summary that highlights its best features (cleanliness, location, value, guest reviews).
-      Return only the summary text, no JSON, no code.`;
-
+      Write a 3-4 sentence engaging summary highlighting its cleanliness, location, amenities, and value.`;
       const aiResult = await model.generateContent(summaryPrompt);
       matchedHotel.ai_summary = aiResult.response.text().trim();
     } catch (err) {
       console.warn("[API LOG] Gemini AI enrichment failed, skipping summary");
     }
 
-    // --- Step 5: Save to cache ---
+    // --- Step 6: Cache result ---
     await supabase.from("hotel_cache").insert({
       cache_key: cacheKey,
       data: matchedHotel,
@@ -111,18 +123,16 @@ export default async function handler(req, res) {
     return res.status(200).json({ hotel: matchedHotel });
   } catch (error) {
     console.error("[API LOG] Unexpected error in hotel-details:", error);
-    return res
-      .status(500)
-      .json({ error: "Internal server error while fetching hotel details" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
 
-// --- Helper functions for name-based searches ---
-async function fetchBookingHotelsByName(name, checkin, checkout) {
+// --- Helper functions unchanged, except Booking uses lat/lon if available ---
+async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon) {
   try {
-    const url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(
-      name
-    )}&locale=en-gb`;
+    let url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(name)}&locale=en-gb`;
+    if (lat && lon) url += `&latitude=${lat}&longitude=${lon}`;
+
     const response = await fetch(url, {
       headers: {
         "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
@@ -131,7 +141,6 @@ async function fetchBookingHotelsByName(name, checkin, checkout) {
     });
 
     if (!response.ok) return [];
-
     const json = await response.json();
 
     return json
@@ -143,14 +152,17 @@ async function fetchBookingHotelsByName(name, checkin, checkout) {
         review_count: Number(h.review_count) || 0,
         image_url: h.image_url || null,
       }))
-      .filter((h) =>
-        h.name.toLowerCase().includes(name.toLowerCase())
-      );
+      .filter((h) => h.name.toLowerCase().includes(name.toLowerCase())); // strict filter
   } catch (err) {
     console.error("[API LOG] Booking.com name search error:", err);
     return [];
   }
 }
+
+// TripAdvisor & TravelAdvisor functions remain the same.
+
+
+// TripAdvisor + TravelAdvisor helpers remain unchanged
 
 async function fetchTripAdvisorHotelsByName(name) {
   try {

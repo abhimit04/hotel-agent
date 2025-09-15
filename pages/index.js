@@ -1,4 +1,3 @@
-//import { useState } from 'react';
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
@@ -14,130 +13,131 @@ export default function HotelLanding() {
   const [summary, setSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [selectedHotelLoading, setSelectedHotelLoading] = useState(false);
-  const [selectedHotel, setSelectedHotel] = useState(null); // <-- NEW: Track selected hotel
+  const [selectedHotel, setSelectedHotel] = useState(null);
 
- const validateDates = () => {
-   if (!checkin || !checkout) {
-     setError("Please select check-in and check-out dates.");
-     return false;
-   }
-   if (new Date(checkout) <= new Date(checkin)) {
-     setError("Check-out date must be after check-in date.");
-     return false;
-   }
-   return true;
- };
+  const validateDates = () => {
+    if (!checkin || !checkout) {
+      setError("Please select check-in and check-out dates.");
+      return false;
+    }
+    if (new Date(checkout) <= new Date(checkin)) {
+      setError("Check-out date must be after check-in date.");
+      return false;
+    }
+    return true;
+  };
 
- // 🔹 Fetch hotels by city/locality
- async function fetchHotelsByCity(cityQuery) {
-   if (!cityQuery || !cityQuery.trim()) {
-     setError("Please enter a city or locality.");
-     return;
-   }
-   if (!validateDates()) return;
+  async function fetchHotelsByCity(cityQuery) {
+    if (!cityQuery || !cityQuery.trim()) {
+      setError("Please enter a city or locality.");
+      return;
+    }
+    if (!validateDates()) return;
 
-   setLoading(true);
-   setError("");
-   setHotels([]);
-   setSummary("");
+    setLoading(true);
+    setError("");
+    setHotels([]);
+    setSummary("");
 
-   try {
-     const res = await fetch(
-       `/api/hotels?city=${encodeURIComponent(cityQuery)}&checkin_date=${encodeURIComponent(
-         checkin
-       )}&checkout_date=${encodeURIComponent(checkout)}`
-     );
-     const data = await res.json();
+    try {
+      const res = await fetch(
+        `/api/hotels?city=${encodeURIComponent(cityQuery)}&checkin_date=${encodeURIComponent(
+          checkin
+        )}&checkout_date=${encodeURIComponent(checkout)}`
+      );
+      const data = await res.json();
 
-     if (!res.ok) {
-       setError(data?.error?.message || "Failed to fetch hotels.");
-       return;
-     }
-     if (!data.hotels || data.hotels.length === 0) {
-       setError("No hotels found for that location and dates.");
-       return;
-     }
+      if (!res.ok) {
+        setError(data?.error?.message || "Failed to fetch hotels.");
+        return;
+      }
+      if (!data.hotels || data.hotels.length === 0) {
+        setError("No hotels found for that location and dates.");
+        return;
+      }
 
-     setHotels(data.hotels);
-     generateAiSummary(data.hotels, cityQuery);
-   } catch (err) {
-     console.error("fetchHotelsByCity error", err);
-     setError("Unable to fetch hotels. Try again.");
-   } finally {
-     setLoading(false);
-   }
- }
+      setHotels(data.hotels);
+      generateAiSummary(data.hotels, cityQuery);
+    } catch (err) {
+      console.error("fetchHotelsByCity error", err);
+      setError("Unable to fetch hotels. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
- // 🔹 Fetch hotel details by name (more specific)
- async function fetchHotelDetailsByName(nameToSearch) {
-   if (!nameToSearch || !nameToSearch.trim()) {
-     setError("Please enter a hotel name.");
-     return;
-   }
-   if (!validateDates()) return;
+  async function fetchHotelDetailsByName(nameToSearch) {
+    if (!nameToSearch || !nameToSearch.trim()) {
+      setError("Please enter a hotel name.");
+      return false;
+    }
+    if (!validateDates()) return false;
 
-   setSelectedHotelLoading(true);
-   setSelectedHotel(null);
-   setError("");
-   setSummary("");
+    setSelectedHotelLoading(true);
+    setSelectedHotel(null);
+    setError("");
+    setSummary("");
 
-   try {
-     const res = await fetch(
-       `/api/hotel-details?hotel_name=${encodeURIComponent(
-         nameToSearch
-       )}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`
-     );
-     const data = await res.json();
+    try {
+      const res = await fetch(
+        `/api/hotel-details?hotel_name=${encodeURIComponent(
+          nameToSearch
+        )}&checkin_date=${encodeURIComponent(checkin)}&checkout_date=${encodeURIComponent(checkout)}`
+      );
+      const data = await res.json();
 
-     if (!res.ok || data.error || !data.hotel) {
-       console.warn(`[API LOG] No exact hotel match for "${nameToSearch}"`);
-       return false; // Return false so caller can fallback to city search
-     }
+      if (!res.ok || data.error || !data.hotel) {
+        console.warn(`[API LOG] No exact hotel match for "${nameToSearch}"`);
+        return false;
+      }
 
-     setSelectedHotel(data.hotel);
-     if (data.summary) setSummary(data.summary);
-     return true; // Found hotel
-   } catch (err) {
-     console.error("fetchHotelDetailsByName error", err);
-     setError("Unable to fetch hotel details. Try again.");
-     return false;
-   } finally {
-     setSelectedHotelLoading(false);
-   }
- }
+      setSelectedHotel(data.hotel);
+      if (data.summary) setSummary(data.summary);
+      return true;
+    } catch (err) {
+      console.error("fetchHotelDetailsByName error", err);
+      setError("Unable to fetch hotel details. Try again.");
+      return false;
+    } finally {
+      setSelectedHotelLoading(false);
+    }
+  }
 
- // 🔹 Main search handler
- const handleSearch = async () => {
-   setError("");
-   setHotels([]);
-   setSelectedHotel(null);
-   setSummary("");
+  // ✅ Main Search Handler — updated to NOT fallback to city if hotel name search fails
+  const handleSearch = async () => {
+    setError("");
+    setHotels([]);
+    setSelectedHotel(null);
+    setSummary("");
 
-   const query = (hotelName || city).trim();
-   if (!query) {
-     setError("Please enter a city, locality, or hotel name.");
-     return;
-   }
+    const query = (hotelName || city).trim();
+    if (!query) {
+      setError("Please enter a city, locality, or hotel name.");
+      return;
+    }
 
-   // ✅ Try specific hotel first
-   const foundHotel = await fetchHotelDetailsByName(query);
-   if (foundHotel) return;
+    // First try hotel name search
+    const foundHotel = await fetchHotelDetailsByName(query);
+    if (foundHotel) return;
 
-   // ✅ Fallback to city search
-   await fetchHotelsByCity(query);
- };
+    // If user specifically entered a hotel name and no match found, STOP here
+    if (hotelName.trim()) {
+      setError("No hotels available with that name for the selected dates.");
+      return;
+    }
 
- const handleKeyPress = (e) => {
-   if (e.key === "Enter") {
-     handleSearch();
-   }
- };
+    // Otherwise fallback to city search
+    await fetchHotelsByCity(query);
+  };
 
- // 🔹 When user clicks "View Details" from list
- const openHotelDetails = async (hotel) => {
-   const name = hotel.name || hotel.hotel_name || "";
-   await fetchHotelDetailsByName(name);
- };
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") handleSearch();
+  };
+
+  const openHotelDetails = async (hotel) => {
+    const name = hotel.name || hotel.hotel_name || "";
+    await fetchHotelDetailsByName(name);
+  };
 
   const generateAiSummary = async (hotelData, searchCity) => {
     setSummaryLoading(true);
