@@ -41,7 +41,7 @@ async function fetchHotelsByCity() {
 
     try {
       const res = await fetch(
-        `/api/hotel?city=${encodeURIComponent(city)}&checkin_date=${encodeURIComponent(
+        `/api/hotels?city=${encodeURIComponent(city)}&checkin_date=${encodeURIComponent(
           checkin
         )}&checkout_date=${encodeURIComponent(checkout)}`
       );
