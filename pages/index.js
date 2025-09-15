@@ -391,7 +391,7 @@ export default function HotelLanding() {
                     {/* Close Button */}
                     <button
                       className="absolute top-3 right-3 text-gray-600 hover:text-black"
-                      onClick={() => setSelectedHotel(null)}
+                      onClick={() => openHotelDetails(h)}
                     >
                       ✕
                     </button>
