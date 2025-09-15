@@ -23,6 +23,7 @@ export default async function handler(req, res) {
     }
 
     const first = data[0];
+    console.log("Geocode result inside geocode.js:", first);
 
     // Booking.com returns dest_type (city, region, hotel, landmark, etc.)
     return res.status(200).json({

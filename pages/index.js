@@ -111,6 +111,7 @@ export default function HotelLanding() {
 
       const data = await res.json();
       // Assuming response looks like: { type: "hotel" | "city" | "locality", name, lat, lon }
+      console.log("Geocode response inside index.js:", data);
       return data;
     } catch (err) {
       console.error("detectQueryType error", err);
