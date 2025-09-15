@@ -120,6 +120,11 @@ async function fetchHotelsByCity() {
       await fetchHotelsByCity();
     };
 
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+         handleSearch();
+    };
+
     // When user clicks "View Details" for a hotel in the list, fetch details via hotel-details endpoint
     const openHotelDetails = async (h) => {
       // Prefer using any ID if available, but the backend can also accept name+city
