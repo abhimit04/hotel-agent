@@ -116,8 +116,21 @@ export default async function handler(req, res) {
       Available rooms and pricing:
       ${roomList}
 
-      Write a 3-4 sentence engaging summary highlighting its cleanliness, location, amenities, and value. Also provide the types of room available and prices.
-      Provide an insight about the month when this is in demand and when it tapers off`;
+      Write a well-formatted 3-4 sentence engaging summary for the hotel highlighting cleanliness (room and toilet), location, price, room service, food and overall guest experience.
+      Provide a structured analysis in Markdown format with these sections:
+      - Begin with a short intro sentence.
+      - Then list location,amenities, room-service.
+      - Then Focus on types of room available and prices.
+      - List down 2-3 customer feedbacks.
+      - End with a short closing remark (1 line) encouraging booking.
+
+//      Write a 3-4 sentence engaging summary .
+//      Also provide the types of room available and prices. Insight on the typical guest profile (e.g., business, family, couples) is a plus.
+      //Provide an insight about the month when this is in demand and when it tapers off.
+
+      Return ONLY the Markdown summary (no JSON, no explanations).`;
+
+
       const aiResult = await model.generateContent(summaryPrompt);
       matchedHotel.ai_summary = aiResult.response.text().trim();
     } catch (err) {
