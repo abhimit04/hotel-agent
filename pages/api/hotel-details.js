@@ -169,12 +169,12 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon) {
 
     return json
       .map((h) => ({
-        id: h.dest_id,
+        //id: h.dest_id,
         name: h.label,
         address: h.city_name,
         review_score: Number(h.review_score) || 0,
-        review_count: Number(h.review_count) || 0,
-        image_url: h.image_url || null,
+        //review_count: Number(h.review_count) || 0,
+        //image_url: h.image_url || null,
       }))
       .filter((h) => h.name.toLowerCase().includes(name.toLowerCase())); // strict filter
   } catch (err) {
@@ -233,12 +233,12 @@ async function fetchTripAdvisorHotelsByName(name) {
     const json = await response.json();
 
     return (json.data || []).map((h) => ({
-      id: h.location_id,
+      //id: h.location_id,
       name: h.name,
       address: h.address,
       review_score: Number(h.rating) || 0,
-      review_count: Number(h.num_reviews) || 0,
-      image_url: h.photo?.images?.large?.url || null,
+      //review_count: Number(h.num_reviews) || 0,
+      //image_url: h.photo?.images?.large?.url || null,
     }));
   } catch (err) {
     console.error("[API LOG] TripAdvisor name search error:", err);
@@ -265,12 +265,12 @@ async function fetchTravelAdvisorHotelsByName(name) {
     return (json.data || [])
       .filter((x) => x.result_type === "lodging")
       .map((h) => ({
-        id: h.result_object.location_id,
+        //id: h.result_object.location_id,
         name: h.result_object.name,
         address: h.result_object.address,
         review_score: Number(h.result_object.rating) || 0,
-        review_count: Number(h.result_object.num_reviews) || 0,
-        image_url: h.result_object.photo?.images?.large?.url || null,
+        //review_count: Number(h.result_object.num_reviews) || 0,
+        //image_url: h.result_object.photo?.images?.large?.url || null,
       }));
   } catch (err) {
     console.error("[API LOG] TravelAdvisor name search error:", err);
