@@ -106,7 +106,8 @@ export default async function handler(req, res) {
       Review Count: ${matchedHotel.review_count}
       Description: ${matchedHotel.review_text}
 
-      Write a 3-4 sentence engaging summary highlighting its cleanliness, location, amenities, and value.`;
+      Write a 3-4 sentence engaging summary highlighting its cleanliness, location, amenities, and value. Also provide the types of room available and prices.
+      Provide an insight about the month when this is in demand and when it tapers off`;
       const aiResult = await model.generateContent(summaryPrompt);
       matchedHotel.ai_summary = aiResult.response.text().trim();
     } catch (err) {
