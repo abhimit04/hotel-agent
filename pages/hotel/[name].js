@@ -97,15 +97,15 @@ export default function HotelDetailsPage() {
               <div>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full animate-pulse"></div>
-                  <span className="text-emerald-300 text-sm font-medium uppercase tracking-wider">Premium Hotel</span>
+                 // <span className="text-emerald-300 text-sm font-medium uppercase tracking-wider">Premium Hotel</span>
                 </div>
                 <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-200 to-emerald-200 bg-clip-text text-transparent">
                   {hotel?.name || name}
                 </h1>
               </div>
-              <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-2xl text-sm font-bold shadow-lg">
-                FEATURED
-              </div>
+//              <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-2xl text-sm font-bold shadow-lg">
+//                FEATURED
+//              </div>
             </div>
 
             <div className="flex flex-wrap gap-4 text-gray-200">
@@ -128,8 +128,6 @@ export default function HotelDetailsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {Object.entries(hotel)
               .filter(([key]) => key !== "name")
-              // FILTER OUT: Remove id, image_url, review_count, and rooms from display
-              .filter(([key]) => !['id', 'image_url', 'review_count', 'rooms'].includes(key))
               .map(([key, value], index) => (
                 <div
                   key={key}
