@@ -144,7 +144,7 @@ export default async function handler(req, res) {
       created_at: new Date().toISOString(),
     });
 
-    return res.status(200).json({ hotel: matchedHotel });
+    return res.status(200).json({ hotel: matchedHotel, location : location });
   } catch (error) {
     console.error("[API LOG] Unexpected error in hotel-details:", error);
     return res.status(500).json({ error: "Internal server error" });

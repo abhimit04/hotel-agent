@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 
 export default function HotelDetailsPage() {
   const router = useRouter();
-  const { name, checkin_date, checkout_date } = router.query;
+  const { name, location, checkin_date, checkout_date } = router.query;
   const [hotel, setHotel] = useState(null);
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ export default function HotelDetailsPage() {
     async function fetchHotelDetails() {
       try {
         const res = await fetch(
-          `/api/hotel-details?hotel_name=${encodeURIComponent(name)}&checkin_date=${checkin_date}&checkout_date=${checkout_date}`
+          `/api/hotel-details?hotel_name=${encodeURIComponent(name)}&location=${encodeURIComponent(location)}&checkin_date=${checkin_date}&checkout_date=${checkout_date}`
         );
         const data = await res.json();
         if (!res.ok || data.error || !data.hotel) {
