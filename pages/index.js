@@ -97,7 +97,7 @@ export default function HotelLanding() {
 //      setSelectedHotel(data.hotel);
 //      if (data.summary) setSummary(data.summary);
 //      return true;
-        // Navigate to details page instead of fetching directly
+        // Navigate to details page instead of fetching directl
            router.push({
         pathname: `/hotel/${encodeURIComponent(nameToSearch)}`,
         query: {
