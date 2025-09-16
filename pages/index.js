@@ -415,7 +415,7 @@ export default function HotelLanding() {
                   <button
                     onClick={() =>
                     router.push({
-                         pathname: `/hotel/${encodeURIComponent(`${h.name}-${h.city_name || h.region || h.district || ""}`)}`,
+                          pathname: `/hotel/${encodeURIComponent(h.name)}`,
                           query: { checkin_date: checkin, checkout_date: checkout }
                         })
                       }
