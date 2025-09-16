@@ -128,6 +128,8 @@ export default function HotelDetailsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {Object.entries(hotel)
               .filter(([key]) => key !== "name")
+              // FILTER OUT: Remove id, image_url, review_count, and rooms from display
+              .filter(([key]) => !['id', 'image_url', 'review_count', 'rooms'].includes(key))
               .map(([key, value], index) => (
                 <div
                   key={key}
