@@ -94,10 +94,16 @@ export default async function handler(req, res) {
     const sortedHotels = orderBy(hotels, ["review_score", "review_count"], ["desc", "desc"]);
     let matchedHotel = sortedHotels[0];
 
+    // Fetch room details if from Booking.com
+    const rooms = await fetchHotelRooms(matchedHotel.id, checkin_date, checkout_date);
+    matchedHotel.rooms = rooms;
+
     // --- Step 5: AI summary enrichment ---
     try {
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+      const roomList = rooms.map(r => `${r.room_name}: ${r.price} ${r.currency}`).join("\n");
 
       const summaryPrompt = `You are a travel assistant. Summarize this hotel:
       Name: ${matchedHotel.name}
@@ -105,6 +111,8 @@ export default async function handler(req, res) {
       Review Score: ${matchedHotel.review_score}
       Review Count: ${matchedHotel.review_count}
       Description: ${matchedHotel.review_text}
+      Available rooms and pricing:
+      ${roomList}
 
       Write a 3-4 sentence engaging summary highlighting its cleanliness, location, amenities, and value. Also provide the types of room available and prices.
       Provide an insight about the month when this is in demand and when it tapers off`;
@@ -159,6 +167,34 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon) {
     return [];
   }
 }
+// fetching roomdetails from booking.com
+async function fetchHotelRooms(hotelId, checkin, checkout) {
+  try {
+    const url = `https://booking-com.p.rapidapi.com/v1/hotels/room-list?hotel_id=${hotelId}&checkin_date=${checkin}&checkout_date=${checkout}&adults_number=2&locale=en-gb&currency=USD`;
+    const response = await fetch(url, {
+      headers: {
+        "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+        "X-RapidAPI-Host": "booking-com.p.rapidapi.com",
+      },
+    });
+
+    if (!response.ok) return [];
+    const json = await response.json();
+
+    return json.map((room) => ({
+      room_name: room.name,
+      room_description: room.description,
+      price: room.price_breakdown?.gross_price || null,
+      currency: room.price_breakdown?.currency || "INR",
+      max_occupancy: room.max_occupancy || null,
+      photos: room.photos?.map((p) => p.url_max) || [],
+    }));
+  } catch (err) {
+    console.error("[API LOG] Booking.com room list error:", err);
+    return [];
+  }
+}
+
 
 // TripAdvisor & TravelAdvisor functions remain the same.
 
