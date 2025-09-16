@@ -270,7 +270,7 @@ async function fetchTravelAdvisorHotelsByName(name) {
         address: h.result_object.address,
         review_score: Number(h.result_object.rating) || 0,
         //review_count: Number(h.result_object.num_reviews) || 0,
-        //image_url: h.result_object.photo?.images?.large?.url || null,
+        //image_url: h.result_object.photo?.images?.large?.url || null,\
       }));
   } catch (err) {
     console.error("[API LOG] TravelAdvisor name search error:", err);
