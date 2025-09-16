@@ -97,6 +97,7 @@ export default async function handler(req, res) {
     // Fetch room details if from Booking.com
     const rooms = await fetchHotelRooms(matchedHotel.id, checkin_date, checkout_date);
     matchedHotel.rooms = rooms;
+    console.log(`[API LOG] Selected hotel: ${matchedHotel.name} with ${rooms.length} room types`);
 
     // --- Step 5: AI summary enrichment ---
     try {
@@ -104,6 +105,7 @@ export default async function handler(req, res) {
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const roomList = rooms.map(r => `${r.room_name}: ${r.price} ${r.currency}`).join("\n");
+
 
       const summaryPrompt = `You are a travel assistant. Summarize this hotel:
       Name: ${matchedHotel.name}
