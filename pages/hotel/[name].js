@@ -1,3 +1,4 @@
+//[name].js - Hotel Details Page
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
