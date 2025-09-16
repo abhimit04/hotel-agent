@@ -298,8 +298,9 @@ export default function HotelDetailsPage() {
                     </svg>
                   </div>
                   <div className="flex-1">
-                  <div className="text-white leading-relaxed text-lg font-light prose prose-invert max-w-none">
-                  <ReactMarkdown>{summary}</ReactMarkdown>
+                    <ReactMarkdown className="prose prose-invert prose-lg max-w-none text-white leading-relaxed">
+                      {summary}
+                    </ReactMarkdown>
                   </div>
                 </div>
               </div>
