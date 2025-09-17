@@ -170,8 +170,8 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon) {
     const json = await response.json();
 
     //console.log(`[API LOG] Booking.com found ${json.length} locations for "${name}"`);
-    return json
     console.log("Booking.com raw data:", json);
+    return json
       .map((h) => ({
         //id: h.dest_id,
         name: h.label,
