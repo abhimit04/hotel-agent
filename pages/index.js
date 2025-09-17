@@ -69,7 +69,7 @@ export default function HotelLanding() {
     }
   }
 
-  async function fetchHotelDetailsByName(nameToSearch) {
+  async function fetchHotelDetailsByName(nameToSearch, location) {
     if (!nameToSearch || !nameToSearch.trim()) {
       setError("Please enter a hotel name.");
       return false;
@@ -102,7 +102,8 @@ export default function HotelLanding() {
         pathname: `/hotel/${encodeURIComponent(nameToSearch)}`,
         query: {
         checkin_date: checkin,
-        checkout_date: checkout
+        checkout_date: checkout,
+        location: location ? encodeURIComponent(location) : ""
          }
         });
         return true;
@@ -175,10 +176,17 @@ export default function HotelLanding() {
     if (e.key === "Enter") handleSearch();
   };
 
-  const openHotelDetails = async (hotel) => {
-    const name = hotel.name || hotel.hotel_name || "";
-    await fetchHotelDetailsByName(name);
-  };
+//  const openHotelDetails = async (hotel) => {
+//    const name = hotel.name || hotel.hotel_name || "";
+//    await fetchHotelDetailsByName(name);
+//  };
+
+const openHotelDetails = async (hotel) => {
+  const name = hotel.name || hotel.hotel_name || "";
+  const location = hotel.label || hotel.city || ""; // fallback to city if label is missing
+
+  await fetchHotelDetailsByName(name, location);
+};
 
   const generateAiSummary = async (hotelData, searchCity) => {
     setSummaryLoading(true);
@@ -353,7 +361,6 @@ export default function HotelLanding() {
         {hotels.length > 0 && (
           <div className="w-full max-w-7xl grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             {hotels.map(h => (
-             console.log("Hotel object h:", h);
               <div
                 key={h.id}
                 className="group bg-white bg-opacity-15 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-white border-opacity-30 hover:bg-opacity-25 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-3xl"
