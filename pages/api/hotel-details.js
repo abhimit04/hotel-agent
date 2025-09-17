@@ -176,7 +176,7 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon) {
         //review_count: Number(h.review_count) || 0,
         //image_url: h.image_url || null,
       }))
-      .filter((h) => h.name.toLowerCase().includes(name.toLowerCase()) && (!location || h.city_name?.toLowerCase() === location.toLowerCase()) // strict filter
+      .filter((h) => h.name.toLowerCase().includes(name.toLowerCase()) && (!location || h.city_name?.toLowerCase() === location.toLowerCase())) // strict filter
   } catch (err) {
     console.error("[API LOG] Booking.com name search error:", err);
     return [];
