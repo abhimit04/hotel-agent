@@ -353,6 +353,7 @@ export default function HotelLanding() {
         {hotels.length > 0 && (
           <div className="w-full max-w-7xl grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             {hotels.map(h => (
+             console.log("Hotel object h:", h);
               <div
                 key={h.id}
                 className="group bg-white bg-opacity-15 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-white border-opacity-30 hover:bg-opacity-25 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-3xl"
