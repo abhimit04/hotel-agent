@@ -416,7 +416,11 @@ export default function HotelLanding() {
                     onClick={() =>
                     router.push({
                           pathname: `/hotel/${encodeURIComponent(h.name)}`,
-                          query: { checkin_date: checkin, checkout_date: checkout }
+                          query: {
+                                  checkin_date: checkin,
+                                  checkout_date: checkout,
+                                  location: h.city
+                                  }
                         })
                       }
                     className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white py-3 rounded-xl font-semibold hover:from-cyan-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
