@@ -184,6 +184,7 @@ export default function HotelLanding() {
 const openHotelDetails = async (hotel) => {
   const name = hotel.name || hotel.hotel_name || "";
   const location = hotel.label || hotel.city || ""; // fallback to city if label is missing
+  console.log("Navigating to hotel details for:", name, location);
 
   await fetchHotelDetailsByName(name, location);
 };
