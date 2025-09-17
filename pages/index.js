@@ -419,7 +419,7 @@ export default function HotelLanding() {
                           query: {
                                   checkin_date: checkin,
                                   checkout_date: checkout,
-                                  location: h.city_name
+                                  location: h.label
                                   }
                         })
                       }
