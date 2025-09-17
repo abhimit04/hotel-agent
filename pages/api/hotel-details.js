@@ -30,6 +30,8 @@ async function safeFetchGeo(location) {
 export default async function handler(req, res) {
   const { hotel_name, location, checkin_date, checkout_date } = req.query;
 
+  console.log("API Query Params:", { hotel_name, checkin_date, checkout_date, location });
+
   if (!hotel_name || !checkin_date || !checkout_date) {
     return res.status(400).json({
       error: "hotel_name, checkin_date, and checkout_date are required parameters",
