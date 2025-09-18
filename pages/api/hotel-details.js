@@ -28,7 +28,7 @@ async function safeFetchGeo(location) {
 }
 
 export default async function handler(req, res) {
-  const { hotel_name, location, checkin_date, checkout_date } = req.query;
+  const { hotel_name, checkin_date, checkout_date, location } = req.query;
 
   console.log("API Query Params:", { hotel_name, checkin_date, checkout_date, location });
 
@@ -154,7 +154,7 @@ export default async function handler(req, res) {
 }
 
 // --- Helper functions unchanged, except Booking uses lat/lon if available ---
-async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon) {
+async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, location) {
   try {
     let url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(name)}&locale=en-gb`;
     if (lat && lon) url += `&latitude=${lat}&longitude=${lon}`;
@@ -167,22 +167,25 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon) {
     });
 
     if (!response.ok) return [];
-    const json = await response.json();
 
-    //console.log(`[API LOG] Booking.com found ${json.length} locations for "${name}"`);
+    const json = await response.json();
     console.log("Booking.com raw data:", json);
-    return json
+
+    const filtered = json
       .map((h) => ({
-        //id: h.dest_id,
         name: h.label,
         label: h.label,
         address: h.city_name,
         review_score: Number(h.review_score) || 0,
-        //review_count: Number(h.review_count) || 0,
-        //image_url: h.image_url || null,
       }))
-      .filter((h) => h.name.toLowerCase().includes(name.toLowerCase()) && (!location || h.label?.toLowerCase().includes(location.toLowerCase())))
-       console.log("Filtered Booking.com hotels:", json);
+      .filter((h) => {
+        const nameMatch = h.name?.toLowerCase().includes(name.toLowerCase());
+        const locationMatch = !location || h.label?.toLowerCase().includes(location.toLowerCase());
+        return nameMatch && locationMatch;
+      });
+
+    console.log("Filtered Booking.com hotels:", filtered);
+    return filtered;
   } catch (err) {
     console.error("[API LOG] Booking.com name search error:", err);
     return [];
