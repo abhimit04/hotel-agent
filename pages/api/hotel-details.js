@@ -180,7 +180,9 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, locat
       }))
       .filter((h) => {
         const nameMatch = h.name?.toLowerCase().includes(name.toLowerCase());
+        console.log(`Name match for "${h.name}":`, nameMatch);
         const locationMatch = !location || h.label?.toLowerCase().includes(location.toLowerCase());
+        console.log(`Location match for "${h.label}":`, locationMatch);
         return nameMatch && locationMatch;
       });
 
