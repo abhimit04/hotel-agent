@@ -175,7 +175,7 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, locat
       .map((h) => ({
         name: h.label,
         label: h.label,
-        address: h.city_name,
+        address: h.address,
         review_score: Number(h.review_score) || 0,
       }))
       .filter((h) => {
