@@ -8,7 +8,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 
 // In-memory cache
 const memoryCache = new Map();
-const CACHE_TTL = 20 * 60 * 1000; // 10 minutes
+const CACHE_TTL = 30 * 60 * 1000; // 10 minutes
 
 export default async function handler(req, res) {
   const { city, checkin_date, checkout_date } = req.query;
