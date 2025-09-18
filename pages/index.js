@@ -388,14 +388,14 @@ const openHotelDetails = async (hotel) => {
                 <h3 className="font-bold text-2xl mb-3 text-white group-hover:text-cyan-200 transition-colors duration-300">
                   {h.name}
                 </h3>
-
+                console.log("Hotel data in index.js:", h);
                 {/* Hotel Details */}
                 <div className="space-y-3 text-gray-200">
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     </svg>
-                    <p className="text-sm">{h.label}</p> //{h.address}
+                    <p className="text-sm">{h.address}</p>
                   </div>
 
                   <div className="flex items-center gap-2">
