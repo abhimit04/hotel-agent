@@ -175,13 +175,17 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, locat
       .map((h) => ({
         name: h.label,
         label: h.label,
-        address: h.city_name,
+        address: h.address,
+        city: h.city_name,
         review_score: Number(h.review_score) || 0,
       }))
       .filter((h) => {
         const nameMatch = h.name?.toLowerCase().includes(name.toLowerCase());
+
         console.log(`Name match for "${h.name}":`, nameMatch);
-        const locationMatch = !location || h.label?.toLowerCase().includes(location.toLowerCase());
+
+        const locationMatch = !location || h.city?.toLowerCase()===(location.toLowerCase());
+
         console.log(`Location match for "${h.label}":`, locationMatch);
         return nameMatch && locationMatch;
       });
