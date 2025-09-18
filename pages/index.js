@@ -428,7 +428,7 @@ const openHotelDetails = async (hotel) => {
                           query: {
                                   checkin_date: checkin,
                                   checkout_date: checkout,
-                                  location: encodeURIComponent(h.label)
+                                  location: h.label ? encodeURIComponent(h.label) : ""
                                   }
                         })
                       }
