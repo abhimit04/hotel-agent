@@ -429,7 +429,7 @@ const openHotelDetails = async (hotel) => {
                           query: {
                                   checkin_date: checkin,
                                   checkout_date: checkout,
-                                  location: h.city_name
+                                  location: h.address
                                   }
                         })
                       }
