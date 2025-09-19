@@ -241,7 +241,7 @@ async function fetchBookingHotels(lat, lon) {
       latitude: h.latitude,
       longitude: h.longitude,
       label: h.label,
-      city : h.city_name
+      city : h.city_name,
       price: h.price_breakdown?.gross_price ?? null,
       currency: h.price_breakdown?.currency ?? "INR",
       review_score: Number(h.review_score) || 0,
