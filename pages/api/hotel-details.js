@@ -89,18 +89,23 @@ export default async function handler(req, res) {
     ];
 
     // ✅ STRICT MODE: if no hotels found, return immediately — no city fallback
-    if (!hotels || hotels.length === 0) {
-      console.warn(`[API LOG] No hotels found for: ${hotel_name}`);
-      return res.status(404).json({ error: `No hotels available for "${hotel_name}"` });
+    const exactMatches = hotels.filter(
+      h => h.name?.toLowerCase().includes(hotel_name.toLowerCase()) &&
+           (!location || h.city?.toLowerCase() === location.toLowerCase())
+    );
+
+    let matchedHotel;
+    if (exactMatches.length > 0) {
+      // If multiple exact matches, pick highest review score
+      matchedHotel = exactMatches.sort((a, b) => b.review_score - a.review_score)[0];
+    } else {
+      // Fallback: highest score among all hotels
+      matchedHotel = hotels.sort((a, b) => b.review_score - a.review_score)[0];
     }
 
-    // --- Step 4: Sort & pick best match ---
-    const sortedHotels = orderBy(hotels, ["review_score", "review_count"], ["desc", "desc"]);
-    let matchedHotel = sortedHotels[0];
-    console.log(`[API LOG] Best matched hotel: ${matchedHotel.name} (Score: ${matchedHotel.review_score}, Reviews: ${matchedHotel.review_count})`);
 
     // Fetch room details if from Booking.com
-    const rooms = await fetchHotelRooms(matchedHotel.id, checkin_date, checkout_date,location);
+    const rooms = await fetchHotelRooms(matchedHotel.id, checkin_date, checkout_date);
     matchedHotel.rooms = rooms;
     console.log(`[API LOG] Selected hotel: ${matchedHotel.name} with ${rooms.length} room types`);
 
@@ -203,7 +208,7 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, locat
   }
 }
 // fetching roomdetails from booking.com
-async function fetchHotelRooms(hotelId, checkin, checkout,location) {
+async function fetchHotelRooms(hotelId, checkin, checkout) {
   try {
     const url = `https://booking-com.p.rapidapi.com/v1/hotels/room-list?hotel_id=${hotelId}&checkin_date=${checkin}&checkout_date=${checkout}&adults_number=2&locale=en-gb&currency=USD`;
     const response = await fetch(url, {
