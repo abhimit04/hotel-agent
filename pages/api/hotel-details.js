@@ -193,7 +193,7 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, locat
 
         console.log(`Name match for "${h.name}":`, nameMatch);
 
-        const locationMatch = location ? h.city?.toLowerCase() === location.toLowerCase()
+        const locationMatch = location ? h.city?.toLowerCase().includes(location.toLowerCase())
                                         : true;
 
         console.log(`Location match for "${h.label}":`, locationMatch);
