@@ -158,7 +158,7 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, locat
   try {
     let url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(name)}&locale=en-gb`;
 
-    //if (lat && lon) url += `&latitude=${lat}&longitude=${lon}`;
+    if (lat && lon) url += `&latitude=${lat}&longitude=${lon}`;
 
     const response = await fetch(url, {
       headers: {
@@ -185,7 +185,10 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, locat
 
         console.log(`Name match for "${h.name}":`, nameMatch);
 
-        const locationMatch = !location || h.label?.toLowerCase().includes(location.toLowerCase());
+        const locationMatch = location
+                                        ? h.label?.toLowerCase().includes(location.toLowerCase()) ||
+                                          h.city?.toLowerCase().includes(location.toLowerCase())
+                                        : true;
 
         console.log(`Location match for "${h.label}":`, locationMatch);
         return nameMatch && locationMatch;
