@@ -209,6 +209,14 @@ const openHotelDetails = async (hotel) => {
     }
   };
 
+  function extractCityFromLabel(label) {
+    if (!label) return "";
+    // Example: "City Central Hostel, Kolkata, West Bengal, India"
+    const parts = label.split(",");
+    return parts.length > 1 ? parts[1].trim() : ""; // take 2nd part as city
+  }
+
+
 //  const handleSearch = () => {
 //    if (city.trim()) {
 //      fetchHotels({ preventDefault: () => {} });
@@ -429,7 +437,7 @@ const openHotelDetails = async (hotel) => {
                           query: {
                                   checkin_date: checkin,
                                   checkout_date: checkout,
-                                  location: h.city
+                                  location: h.city_name || h.city || extractCityFromLabel(h.label)
                                   }
                         })
                       }
