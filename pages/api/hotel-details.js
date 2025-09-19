@@ -157,7 +157,8 @@ export default async function handler(req, res) {
 async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, location) {
   try {
     let url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(name)}&locale=en-gb`;
-    if (lat && lon) url += `&latitude=${lat}&longitude=${lon}`;
+
+    //if (lat && lon) url += `&latitude=${lat}&longitude=${lon}`;
 
     const response = await fetch(url, {
       headers: {
