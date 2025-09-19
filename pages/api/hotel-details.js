@@ -203,7 +203,7 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, locat
   }
 }
 // fetching roomdetails from booking.com
-async function fetchHotelRooms(hotelId, checkin, checkout) {
+async function fetchHotelRooms(hotelId, checkin, checkout,location) {
   try {
     const url = `https://booking-com.p.rapidapi.com/v1/hotels/room-list?hotel_id=${hotelId}&checkin_date=${checkin}&checkout_date=${checkout}&adults_number=2&locale=en-gb&currency=USD`;
     const response = await fetch(url, {
