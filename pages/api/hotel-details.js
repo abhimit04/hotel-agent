@@ -80,7 +80,7 @@ export default async function handler(req, res) {
       fetchTravelAdvisorHotelsByName(hotel_name,location),
     ]);
     console.log("[API LOG] Fetched hotel data from APIs");
-    console.log(`[API LOG] Filtering for name: ${name}, location: ${location}`);
+
 
     let hotels = [
       ...(bookingHotels.status === "fulfilled" ? bookingHotels.value : []),
