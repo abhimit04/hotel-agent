@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 
     // --- Step 3: Fetch from all hotel APIs (STRICT mode: no fallback to city search) ---
     const [bookingHotels, tripAdvisorHotels, travelAdvisorHotels] = await Promise.allSettled([
-      fetchBookingHotelsByName(hotel_name, location, checkin_date, checkout_date, lat, lon),
+      fetchBookingHotelsByName(hotel_name, checkin_date, checkout_date, lat, lon),
       fetchTripAdvisorHotelsByName(hotel_name),
       fetchTravelAdvisorHotelsByName(hotel_name),
     ]);
@@ -154,7 +154,7 @@ export default async function handler(req, res) {
 }
 
 // --- Helper functions unchanged, except Booking uses lat/lon if available ---
-async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, location) {
+async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon) {
   try {
     let url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(name)}&locale=en-gb`;
 
