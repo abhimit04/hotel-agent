@@ -97,9 +97,10 @@ export default async function handler(req, res) {
     // --- Step 4: Sort & pick best match ---
     const sortedHotels = orderBy(hotels, ["review_score", "review_count"], ["desc", "desc"]);
     let matchedHotel = sortedHotels[0];
+    console.log(`[API LOG] Best matched hotel: ${matchedHotel.name} (Score: ${matchedHotel.review_score}, Reviews: ${matchedHotel.review_count})`);
 
     // Fetch room details if from Booking.com
-    const rooms = await fetchHotelRooms(matchedHotel.id, checkin_date, checkout_date);
+    const rooms = await fetchHotelRooms(matchedHotel.id, checkin_date, checkout_date,location);
     matchedHotel.rooms = rooms;
     console.log(`[API LOG] Selected hotel: ${matchedHotel.name} with ${rooms.length} room types`);
 

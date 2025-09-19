@@ -19,6 +19,7 @@ export default function HotelDetailsPage() {
           `/api/hotel-details?hotel_name=${encodeURIComponent(name)}&checkin_date=${checkin_date}&checkout_date=${checkout_date}&location=${encodeURIComponent(location)}`
         );
         const data = await res.json();
+        console.log("Fetched hotel inside [name].js details:", data);
         if (!res.ok || data.error || !data.hotel) {
           setError("No details found for this hotel.");
           return;
