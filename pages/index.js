@@ -103,7 +103,7 @@ export default function HotelLanding() {
         query: {
         checkin_date: checkin,
         checkout_date: checkout,
-        location: location ? encodeURIComponent(location) : ""
+        location: location || ""
          }
         });
         return true;
@@ -149,7 +149,7 @@ export default function HotelLanding() {
       const detection = await detectQueryType(query);
 
       if (detection.type === "hotel") {
-        const foundHotel = await fetchHotelDetailsByName(detection.name);
+        const foundHotel = await fetchHotelDetailsByName(detection.name,detection.city || detection.location || "");
         if (!foundHotel) setError("No hotels available with that name.");
         return;
       }
@@ -211,10 +211,11 @@ const openHotelDetails = async (hotel) => {
 
   function extractCityFromLabel(label) {
     if (!label) return "";
-    // Example: "City Central Hostel, Kolkata, West Bengal, India"
-    const parts = label.split(",");
-    return parts.length > 1 ? parts[1].trim() : ""; // take 2nd part as city
+    const parts = label.split(",").map(p => p.trim());
+    if (parts.length < 2) return "";
+    return parts[parts.length - 2]; // second last part should be city
   }
+
 
 
 //  const handleSearch = () => {
