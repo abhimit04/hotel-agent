@@ -154,7 +154,7 @@ export default async function handler(req, res) {
 }
 
 // --- Helper functions unchanged, except Booking uses lat/lon if available ---
-async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon) {
+async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, location) {
   try {
     let url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(name)}&locale=en-gb`;
 
@@ -185,8 +185,7 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon) {
 
         console.log(`Name match for "${h.name}":`, nameMatch);
 
-        const locationMatch = location
-                                        ? h.label?.toLowerCase().includes(location.toLowerCase()) ||
+        const locationMatch = location ? h.label?.toLowerCase().includes(location.toLowerCase()) ||
                                           h.city?.toLowerCase().includes(location.toLowerCase())
                                         : true;
 
