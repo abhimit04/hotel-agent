@@ -209,12 +209,12 @@ const openHotelDetails = async (hotel) => {
     }
   };
 
-  function extractCityFromLabel(label) {
-    if (!label) return "";
-    const parts = label.split(",").map(p => p.trim());
-    if (parts.length < 2) return "";
-    return parts[parts.length - 2]; // second last part should be city
-  }
+//  function extractCityFromLabel(label) {
+//    if (!label) return "";
+//    const parts = label.split(",").map(p => p.trim());
+//    if (parts.length < 2) return "";
+//    return parts[parts.length - 2]; // second last part should be city
+//  }
 
 
 
@@ -438,7 +438,7 @@ const openHotelDetails = async (hotel) => {
                           query: {
                                   checkin_date: checkin,
                                   checkout_date: checkout,
-                                  location: h.city_name || h.city || extractCityFromLabel(h.label)
+                                  location: h.city
                                   }
                         })
                       }
