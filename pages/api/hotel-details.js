@@ -75,10 +75,12 @@ export default async function handler(req, res) {
 
     // --- Step 3: Fetch from all hotel APIs (STRICT mode: no fallback to city search) ---
     const [bookingHotels, tripAdvisorHotels, travelAdvisorHotels] = await Promise.allSettled([
-      fetchBookingHotelsByName(hotel_name, checkin_date, checkout_date, lat, lon),
-      fetchTripAdvisorHotelsByName(hotel_name),
-      fetchTravelAdvisorHotelsByName(hotel_name),
+      fetchBookingHotelsByName(hotel_name, checkin_date, checkout_date, lat, lon,location),
+      fetchTripAdvisorHotelsByName(hotel_name,location),
+      fetchTravelAdvisorHotelsByName(hotel_name,location),
     ]);
+    console.log("[API LOG] Fetched hotel data from APIs");
+    console.log(`[API LOG] Filtering for name: ${name}, location: ${location}`);
 
     let hotels = [
       ...(bookingHotels.status === "fulfilled" ? bookingHotels.value : []),
