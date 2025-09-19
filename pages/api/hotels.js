@@ -234,6 +234,9 @@ async function fetchBookingHotels(lat, lon) {
     }
 
     const json = await response.json();
+    console.log("[API LOG] Booking.com raw response:", json);
+    console.log(JSON.stringify(json));
+
     return (json.result || []).map((h) => ({
       id: h.hotel_id,
       name: h.hotel_name || h.name,
