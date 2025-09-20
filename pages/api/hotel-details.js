@@ -164,7 +164,7 @@ export default async function handler(req, res) {
 // --- Helper functions unchanged, except Booking uses lat/lon if available ---
 async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, location) {
   try {
-    let url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(name)}&locale=en-gb`;
+    let url = `https://booking-com15.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(name)}&locale=en-gb`;
 
     if (lat && lon) url += `&latitude=${lat}&longitude=${lon}`;
 
@@ -212,7 +212,7 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, locat
 // fetching roomdetails from booking.com
 async function fetchHotelRooms(hotelId, checkin, checkout) {
   try {
-    const url = `https://booking-com.p.rapidapi.com/v1/hotels/room-list?hotel_id=${hotelId}&checkin_date=${checkin}&checkout_date=${checkout}&adults_number=2&locale=en-gb&currency=USD`;
+    const url = `https://booking-com15.p.rapidapi.com/v1/hotels/room-list?hotel_id=${hotelId}&checkin_date=${checkin}&checkout_date=${checkout}&adults_number=2&locale=en-gb&currency=USD`;
     const response = await fetch(url, {
       headers: {
         "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,

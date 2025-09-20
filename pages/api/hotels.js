@@ -220,7 +220,7 @@ async function safeFetchGeo(location) {
 
 async function fetchBookingHotels(lat, lon) {
   try {
-    const url = `https://booking-com.p.rapidapi.com/v1/hotels/search-by-coordinates?dest_type=city&order_by=popularity&filter_by_currency=INR&locale=en-gb&adults_number=1&units=metric&room_number=1&checkin_date=2025-09-20&checkout_date=2025-09-21&latitude=${lat}&longitude=${lon}`;
+    const url = `https://booking-com15.p.rapidapi.com/v1/hotels/search-by-coordinates?dest_type=city&order_by=popularity&filter_by_currency=INR&locale=en-gb&adults_number=1&units=metric&room_number=1&checkin_date=2025-09-20&checkout_date=2025-09-21&latitude=${lat}&longitude=${lon}`;
     const response = await fetch(url, {
       headers: {
         "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
