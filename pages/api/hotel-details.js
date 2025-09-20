@@ -171,7 +171,7 @@ async function fetchBookingHotelsByName(name, checkin, checkout, lat, lon, locat
     const response = await fetch(url, {
       headers: {
         "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "booking-com.p.rapidapi.com",
+        "X-RapidAPI-Host": "booking-com15.p.rapidapi.com",
       },
     });
 
@@ -216,7 +216,7 @@ async function fetchHotelRooms(hotelId, checkin, checkout) {
     const response = await fetch(url, {
       headers: {
         "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "booking-com.p.rapidapi.com",
+        "X-RapidAPI-Host": "booking-com15.p.rapidapi.com",
       },
     });
 
