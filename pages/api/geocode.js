@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (!query) return res.status(400).json({ error: "Query required" });
 
   try {
-    const url = `https://booking-com.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(
+    const url = `https://booking-com15.p.rapidapi.com/v1/hotels/locations?name=${encodeURIComponent(
       query
     )}&locale=en-gb`;
     const response = await fetch(url, {
